@@ -1,0 +1,15 @@
+{
+  "name": "psb-santri",
+  "version": "1.0.0",
+  "description": "Sistem Penerimaan Santri Baru",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tailwindcss -i ./src/input.css -o ./public/css/style.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}
