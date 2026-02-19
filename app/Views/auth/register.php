@@ -146,7 +146,7 @@
                             <input type="text" name="kelas_terakhir" id="kelas_terakhir" value="<?= old('kelas_terakhir') ?>" class="w-full border-slate-200 bg-slate-50 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 px-4 py-3 transition shadow-sm">
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Status Siswa <span class="text-red-500 req-pelajar">*</span></label>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Status Siswa (Saat Mendaftar) <span class="text-red-500 req-pelajar">*</span></label>
                             <select name="status_siswa" id="status_siswa" class="w-full border-slate-200 bg-slate-50 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 px-4 py-3 transition shadow-sm">
                                 <option value="" disabled selected>- Pilih -</option>
                                 <option value="Siswa Baru" <?= old('status_siswa') == 'Siswa Baru' ? 'selected' : '' ?>>Siswa Baru</option>
@@ -154,7 +154,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Daftar Jenjang <span class="text-red-500 req-pelajar">*</span></label>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Daftar Jenjang (Saat Mendaftar)<span class="text-red-500 req-pelajar">*</span></label>
                             <select name="jenjang_pendidikan_didaftar" id="jenjang_pendidikan_didaftar" class="w-full border-slate-200 bg-slate-50 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 px-4 py-3 transition shadow-sm">
                                 <option value="" disabled selected>- Pilih -</option>
                                 <option value="SMP" <?= old('jenjang_pendidikan_didaftar') == 'SMP' ? 'selected' : '' ?>>SMP / MTs</option>
@@ -256,7 +256,7 @@
                             <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
                             </svg>
-                            Tambah Data Wali Lain
+                            Tambah Data Lain
                         </button>
                     </div>
                 </div>

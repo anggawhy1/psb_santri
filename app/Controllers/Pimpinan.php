@@ -169,19 +169,46 @@ class Pimpinan extends BaseController
     // LIST RIWAYAT (Arsip)
     public function riwayat()
     {
-        $db = \Config\Database::connect();
-        $builder = $db->table('pendaftar');
-        
-        $builder->select('pendaftar.*, data_pendidikan.asal_sekolah');
-        $builder->join('data_pendidikan', 'data_pendidikan.id_pendaftar = pendaftar.id_pendaftar', 'left');
-        
-        // Hanya yang sudah Lulus atau Tidak Lulus
-        $builder->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
-        
+        // 1. Ambil keyword DAN parameter sort
+        $keyword = $this->request->getGet('keyword');
+        $sort    = $this->request->getGet('sort'); // <--- TAMBAHAN 1
+
+        // Gunakan Model langsung (agar pagination mendeteksi filter)
+        // Jangan pakai ->builder() terpisah agar paginate jalan normal
+        $model = $this->pendaftarModel;
+
+        $model->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas');
+        $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
+        $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
+
+        // Filter Status Akhir (Hanya yang sudah selesai)
+        $model->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
+
+        // Fitur Search (Nama & No Reg)
+        if ($keyword) {
+            $model->groupStart()
+                ->like('pendaftar.nama_lengkap', $keyword)
+                ->orLike('pendaftar.no_registrasi', $keyword)
+                ->groupEnd();
+        }
+
+        // 2. Logika Sorting (Terbaru vs Terlama)
+        if ($sort == 'oldest') {
+            // Jika user minta 'oldest', urutkan dari ID kecil (lama) ke besar
+            $model->orderBy('pendaftar.id_pendaftar', 'ASC');
+        } else {
+            // Default (newest): urutkan dari ID besar (baru) ke kecil
+            $model->orderBy('pendaftar.id_pendaftar', 'DESC');
+        }
+
         $data = [
-            'title' => 'Riwayat Pendaftar',
-            'data'  => $builder->get()->getResultArray()
+            'title'   => 'Riwayat Pendaftar',
+            'data'    => $model->paginate(10, 'pendaftar'),
+            'pager'   => $model->pager,
+            'keyword' => $keyword,
+            'sort'    => $sort ? $sort : 'newest' // <--- TAMBAHAN 3: Kirim status sort ke View
         ];
+
         return view('pimpinan/riwayat_list', $data);
     }
 

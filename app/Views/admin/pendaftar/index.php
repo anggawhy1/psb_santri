@@ -109,7 +109,7 @@
 
                                 <td class="px-6 py-4 border-r">
                                     <div class="font-bold text-gray-900"><?= esc($row['nama_lengkap']) ?></div>
-                                    <div class="text-xs text-emerald-600 font-mono bg-emerald-50 px-2 py-0.5 rounded inline-block mt-1 border border-emerald-100">
+                                    <div class="text-xs font-mono font-bold text-emerald-600 mt-1">
                                         <?= esc($row['no_registrasi']) ?>
                                     </div>
                                 </td>

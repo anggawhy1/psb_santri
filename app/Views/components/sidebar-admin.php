@@ -16,20 +16,26 @@
             <span class="ml-3 font-medium sidebar-text whitespace-nowrap">Dashboard</span>
         </a>
 
+        <?php 
+            // LOGIKA PENGECEKAN MENU AKTIF
+            $kontenPages = ['admin/berita', 'admin/prestasi', 'admin/galeri', 'admin/informasi'];
+            $isKontenActive = in_array(uri_string(), $kontenPages);
+        ?>
+
         <div class="pt-2">
-            <button onclick="toggleDropdown('konten-menu', 'konten-arrow')" class="w-full group flex items-center justify-between px-4 py-3 mx-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600 pr-8 text-slate-600 focus:outline-none">
+            <button onclick="toggleDropdown('konten-menu', 'konten-arrow')" class="w-full group flex items-center justify-between px-4 py-3 mx-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600 pr-8 focus:outline-none <?= $isKontenActive ? 'text-emerald-600 bg-emerald-50' : 'text-slate-600' ?>">
                 <div class="flex items-center">
                     <svg class="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     <span class="ml-3 font-medium sidebar-text whitespace-nowrap">Manajemen Konten</span>
                 </div>
-                <svg id="konten-arrow" class="sidebar-text w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg id="konten-arrow" class="sidebar-text w-4 h-4 transition-transform duration-200 <?= $isKontenActive ? 'rotate-180' : '' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
 
-            <div id="konten-menu" class="hidden pl-14 pr-3 mt-1 space-y-1 sidebar-text">
+            <div id="konten-menu" class="<?= $isKontenActive ? '' : 'hidden' ?> pl-14 pr-3 mt-1 space-y-1 sidebar-text">
                 <a href="<?= base_url('admin/berita') ?>" class="block px-3 py-2 rounded-lg text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-600 <?= uri_string() == 'admin/berita' ? 'text-emerald-600 font-bold bg-emerald-50' : 'text-slate-500' ?>">Kelola Berita</a>
                 <a href="<?= base_url('admin/prestasi') ?>" class="block px-3 py-2 rounded-lg text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-600 <?= uri_string() == 'admin/prestasi' ? 'text-emerald-600 font-bold bg-emerald-50' : 'text-slate-500' ?>">Kelola Prestasi</a>
                 <a href="<?= base_url('admin/galeri') ?>" class="block px-3 py-2 rounded-lg text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-600 <?= uri_string() == 'admin/galeri' ? 'text-emerald-600 font-bold bg-emerald-50' : 'text-slate-500' ?>">Kelola Galeri</a>
@@ -37,9 +43,6 @@
             </div>
         </div>
 
-        <div class="px-7 py-2 sidebar-text">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Penerimaan</span>
-        </div>
 
         <a href="<?= base_url('admin/pendaftar') ?>" class="group flex items-center px-4 py-3 mx-3 rounded-xl transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600 <?= uri_string() == 'admin/pendaftar' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/20 hover:!bg-emerald-700 hover:!text-white' : '' ?>">
             <svg class="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">

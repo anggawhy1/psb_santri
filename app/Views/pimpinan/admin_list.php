@@ -9,10 +9,7 @@
                 <p class="text-sm text-gray-500">Daftar admin operasional yang memiliki akses sistem.</p>
             </div>
             <a href="<?= base_url('pimpinan/admin/tambah') ?>" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-lg transition shadow-md text-sm active:scale-95">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Tambah Admin
+                Tambah
             </a>
         </div>
     </div>
@@ -58,7 +55,7 @@
                                     <div class="flex items-center justify-center gap-2">
                                         <button
                                             onclick='openModalEdit(<?= json_encode($admin) ?>)'
-                                            class="h-9 w-9 flex items-center justify-center bg-blue-50 text-blue-600 rounded-xl border border-blue-100 hover:bg-blue-600 hover:text-white transition shadow-sm" title="Edit Admin">
+                                            class="h-9 w-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 hover:bg-emerald-600 hover:text-white transition shadow-sm" title="Edit Admin">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
@@ -118,7 +115,7 @@
                 <input type="hidden" name="id_user" id="edit_id_user">
                 <div class="bg-white px-8 pb-6 pt-10">
                     <div class="flex items-center gap-4 mb-8">
-                        <div class="h-14 w-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm">
+                        <div class="h-14 w-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
@@ -132,24 +129,26 @@
                     <div class="space-y-5">
                         <div>
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                            <input type="text" name="nama_lengkap" id="edit_nama" required class="w-full border-gray-200 rounded-xl mt-2 focus:ring-blue-500 h-12 px-4 font-bold text-gray-700 shadow-sm">
+                            <input type="text" name="nama_lengkap" id="edit_nama" required class="w-full border-gray-200 rounded-xl mt-2 focus:ring-emerald-500 h-12 px-4 font-bold text-gray-700 shadow-sm">
                         </div>
                         <div>
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Username</label>
-                            <input type="text" name="username" id="edit_username" required class="w-full border-gray-200 rounded-xl mt-2 focus:ring-blue-500 h-12 px-4 font-bold text-gray-700 shadow-sm">
+                            <input type="text" name="username" id="edit_username" required class="w-full border-gray-200 rounded-xl mt-2 focus:ring-emerald-500 h-12 px-4 font-bold text-gray-700 shadow-sm">
                         </div>
-                        <div class="bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
-                            <label class="text-[10px] font-black text-yellow-600 uppercase tracking-widest ml-1">Ganti Password (Opsional)</label>
-                            <input type="password" name="password" class="w-full border-yellow-200 rounded-xl mt-2 focus:ring-yellow-500 h-12 px-4 text-sm shadow-sm" placeholder="Isi hanya jika ingin ganti">
+                        
+                        <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                            <label class="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-1">Ganti Password (Opsional)</label>
+                            <input type="password" name="password" class="w-full border-emerald-200 rounded-xl mt-2 focus:ring-emerald-500 h-12 px-4 text-sm shadow-sm placeholder-gray-400" placeholder="Isi hanya jika ingin ganti">
                         </div>
                     </div>
                 </div>
-                <div class="bg-blue-50/50 px-8 py-6 flex flex-col gap-3 border-t border-blue-100">
-                    <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95">
+
+                <div class="bg-emerald-50/50 px-8 py-6 flex flex-col gap-3 border-t border-emerald-100">
+                    <button type="submit" class="w-full bg-emerald-600 text-white py-4 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 active:scale-95">
                         Simpan Perubahan
                     </button>
 
-                    <button type="button" onclick="closeModalEdit()" class="w-full bg-white text-gray-500 py-3 rounded-2xl text-xs font-bold hover:text-blue-600 transition-colors border border-transparent hover:border-blue-100">
+                    <button type="button" onclick="closeModalEdit()" class="w-full bg-white text-gray-500 py-3 rounded-2xl text-xs font-bold hover:text-emerald-600 transition-colors border border-transparent hover:border-emerald-100">
                         Batalkan
                     </button>
                 </div>

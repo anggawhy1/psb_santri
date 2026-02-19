@@ -2,16 +2,54 @@
 <?= $this->section('content') ?>
 
 <div class="bg-white rounded-xl shadow-sm p-6">
+    
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        
         <div>
-            <h3 class="font-bold text-lg text-gray-800">Arsip Riwayat Pendaftar</h3>
+            <h2 class="text-xl font-bold text-gray-800">Riwayat Pendaftar</h2>
+            <p class="text-sm text-gray-500">Data santri yang telah selesai proses seleksi.</p>
             <p class="text-sm text-gray-500">Total data: <?= $pager->getTotal('pendaftar') ?></p>
         </div>
         
-        <form action="" method="GET" class="relative">
-            <input type="text" name="keyword" value="<?= $keyword ?>" placeholder="Cari Nama / No.Reg..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500 w-64">
-            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        </form>
+        <div class="relative z-20 w-full md:w-auto">
+            
+            <form action="" method="GET" class="w-full md:w-auto flex items-center gap-2">
+                
+                <input type="hidden" name="sort" value="<?= $sort ?? 'newest' ?>">
+
+                <div class="relative flex-grow">
+                    <input type="text" name="keyword" value="<?= $keyword ?>" placeholder="Cari Nama / No.Reg..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500 w-full md:w-64">
+                    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+
+                <button type="button" onclick="toggleFilter()" class=" text-gray-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 border border-gray-300 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                    Filter
+                </button>
+            </form>
+            <div id="filterMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden transform origin-top-right transition-all">
+                <div class="px-4 py-2 bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Urutkan Berdasarkan</div>
+                
+                <a href="?keyword=<?= $keyword ?>&sort=newest" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex justify-between items-center group">
+                    <span>Terbaru</span>
+                    <?php if(($sort ?? 'newest') == 'newest'): ?>
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <?php endif; ?>
+                </a>
+                
+                <a href="?keyword=<?= $keyword ?>&sort=oldest" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex justify-between items-center group">
+                    <span>Terlama</span>
+                    <?php if(($sort ?? '') == 'oldest'): ?>
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <?php endif; ?>
+                </a>
+            </div>
+
+        </div>
     </div>
 
     <div class="overflow-x-auto">
@@ -29,7 +67,6 @@
                     <tr><td colspan="5" class="text-center py-8 text-gray-400">Data tidak ditemukan.</td></tr>
                 <?php else: ?>
                     <?php 
-                        // Hitung nomor urut berdasarkan halaman pagination
                         $page = $pager->getCurrentPage('pendaftar');
                         $perPage = $pager->getPerPage('pendaftar');
                     ?>
@@ -77,5 +114,29 @@
         </div>
     </div>
 </div>
+
+<script>
+    function toggleFilter() {
+        const menu = document.getElementById('filterMenu');
+        if (menu.classList.contains('hidden')) {
+            menu.classList.remove('hidden');
+            setTimeout(() => {
+                menu.classList.add('opacity-100', 'scale-100');
+                menu.classList.remove('opacity-0', 'scale-95');
+            }, 10);
+        } else {
+            menu.classList.add('hidden');
+        }
+    }
+
+    // Tutup menu kalau klik di luar area
+    window.addEventListener('click', function(e) {
+        const btn = document.querySelector('button[onclick="toggleFilter()"]');
+        const menu = document.getElementById('filterMenu');
+        if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+</script>
 
 <?= $this->endSection() ?>

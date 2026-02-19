@@ -5,10 +5,15 @@
     
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Tambah Admin Baru</h2>
-        <a href="<?= base_url('pimpinan/kelolaAdmin') ?>" class="h-10 w-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm group">
-            <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-        </a>
+        <a href="<?= base_url('pimpinan/kelolaAdmin') ?>" class="text-gray-500 hover:text-emerald-600 font-semibold text-sm flex items-center gap-2 transition bg-white border border-gray-200 px-4 py-2 rounded-lg hover:border-emerald-200 hover:shadow-sm">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+    </svg>
+    Kembali
+</a>
     </div>
+
+    
 
     <?php if(session()->getFlashdata('error')): ?>
         <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">

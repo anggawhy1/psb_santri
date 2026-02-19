@@ -347,33 +347,46 @@ class Admin extends BaseController
 
     public function riwayat()
     {
+        // 1. Ambil keyword DAN parameter sort
         $keyword = $this->request->getGet('keyword');
+        $sort    = $this->request->getGet('sort'); // <--- TAMBAHAN 1
 
-        // Builder Khusus Riwayat
-        $builder = $this->pendaftarModel->builder();
-        $builder->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas'); // Ambil status juga biar lengkap
-        $builder->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
-        $builder->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
+        // Gunakan Model langsung (agar pagination mendeteksi filter)
+        // Jangan pakai ->builder() terpisah agar paginate jalan normal
+        $model = $this->pendaftarModel;
+
+        $model->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas');
+        $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
+        $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
 
         // Filter Status Akhir (Hanya yang sudah selesai)
-        $builder->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
+        $model->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
 
         // Fitur Search (Nama & No Reg)
         if ($keyword) {
-            $builder->groupStart()
+            $model->groupStart()
                 ->like('pendaftar.nama_lengkap', $keyword)
                 ->orLike('pendaftar.no_registrasi', $keyword)
                 ->groupEnd();
         }
 
-        $builder->orderBy('pendaftar.id_pendaftar', 'DESC');
+        // 2. Logika Sorting (Terbaru vs Terlama)
+        if ($sort == 'oldest') {
+            // Jika user minta 'oldest', urutkan dari ID kecil (lama) ke besar
+            $model->orderBy('pendaftar.id_pendaftar', 'ASC');
+        } else {
+            // Default (newest): urutkan dari ID besar (baru) ke kecil
+            $model->orderBy('pendaftar.id_pendaftar', 'DESC');
+        }
 
         $data = [
             'title'   => 'Riwayat Pendaftar',
-            'data'    => $this->pendaftarModel->paginate(10, 'pendaftar'),
-            'pager'   => $this->pendaftarModel->pager,
-            'keyword' => $keyword
+            'data'    => $model->paginate(10, 'pendaftar'),
+            'pager'   => $model->pager,
+            'keyword' => $keyword,
+            'sort'    => $sort ? $sort : 'newest' // <--- TAMBAHAN 3: Kirim status sort ke View
         ];
+
         return view('admin/pendaftar/riwayat', $data);
     }
 
@@ -482,7 +495,7 @@ class Admin extends BaseController
         ]);
         return redirect()->to('admin/viewFormulir/' . $id)->with('success', 'Data diubah.');
     }
-    
+
     public function verifikasiPembayaran()
     {
         $id = $this->request->getPost('id_pendaftar');
@@ -501,7 +514,7 @@ class Admin extends BaseController
                 'keterangan'    => $this->request->getPost('keterangan') // Tambahan ini
             ])
             ->update();
-            
+
         return redirect()->to('admin/viewBerkas/' . $id)->with('success', 'Berkas diperbarui.');
     }
     // -------------------------
@@ -528,13 +541,26 @@ class Admin extends BaseController
         $db = \Config\Database::connect();
         $idUser = session()->get('id_user');
 
+        // 1. Cek apakah ada ID di session
+        if (!$idUser) {
+            return redirect()->to('/login')->with('error', 'Sesi habis, silakan login kembali.');
+        }
+
         // Ambil data user admin dari tabel users
         $user = $db->table('users')->where('id_user', $idUser)->get()->getRowArray();
+
+        // 2. Cek apakah data user ditemukan di database
+        if (!$user) {
+            // Hapus session error dan lempar ke login
+            session()->destroy();
+            return redirect()->to('/login')->with('error', 'Data user tidak ditemukan.');
+        }
 
         $data = [
             'title' => 'Profil Saya',
             'user'  => $user
         ];
+
         return view('admin/profile', $data);
     }
 
