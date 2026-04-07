@@ -70,7 +70,7 @@
                         <p class="text-sm text-red-500">Pembayaran ditolak. Silakan upload ulang.</p>
                         <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded mt-1 inline-block">Gagal</span>
                     <?php else: ?>
-                         <p class="text-sm text-gray-500">Menunggu pembayaran santri.</p>
+                         <p class="text-sm text-gray-500">Menunggu pembayaran biaya pendaftaran.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -81,7 +81,9 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     </div>
                 <?php elseif($status_berkas == 'Ditolak'): ?>
-                     <div class="absolute -left-[21px] bg-red-500 h-10 w-10 rounded-full flex items-center justify-center text-white border-4 border-white shadow-sm">X</div>
+                     <div class="absolute -left-[21px] bg-red-500 h-10 w-10 rounded-full flex items-center justify-center text-white border-4 border-white shadow-sm">
+                         <span class="font-bold">X</span>
+                     </div>
                 <?php else: ?>
                     <div class="absolute -left-[21px] bg-gray-300 h-10 w-10 rounded-full flex items-center justify-center text-white border-4 border-white shadow-sm">
                          <span class="font-bold text-xs">3</span>
@@ -96,6 +98,9 @@
                     <?php elseif($status_berkas == 'Menunggu'): ?>
                         <p class="text-sm text-gray-500">Berkas sudah diupload, menunggu cek admin.</p>
                         <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded mt-1 inline-block">Menunggu</span>
+                    <?php elseif($status_berkas == 'Ditolak'): ?>
+                        <p class="text-sm text-red-500">Berkas ditolak. Silakan upload ulang file yang diminta.</p>
+                        <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded mt-1 inline-block">Ditolak</span>
                     <?php else: ?>
                         <p class="text-sm text-gray-500">Menunggu kelengkapan dokumen.</p>
                     <?php endif; ?>
@@ -118,9 +123,22 @@
                     <?php if($jadwal): ?>
                         <div class="bg-blue-50 p-3 rounded-lg mt-2 border border-blue-100">
                             <p class="text-sm"><strong>Tanggal:</strong> <?= date('d F Y, H:i', strtotime($jadwal['tanggal_wawancara'])) ?> WIB</p>
-                            <p class="text-sm mt-1"><strong>Status:</strong> <?= $jadwal['status_wawancara'] ?></p>
+                            <p class="text-sm mt-1 mb-1"><strong>Status:</strong> <?= $jadwal['status_wawancara'] ?></p>
+                            
                             <?php if($jadwal['tautan_video']): ?>
-                                 <a href="<?= $jadwal['tautan_video'] ?>" target="_blank" class="block mt-2 text-sm text-blue-600 underline font-bold">Link Zoom / Meet</a>
+                                 <div class="flex items-center gap-2 mt-2">
+                                     <a href="<?= $jadwal['tautan_video'] ?>" target="_blank" class="text-sm text-blue-600 underline font-bold hover:text-blue-800 transition">
+                                         Buka Link Zoom / Meet
+                                     </a>
+                                     
+                                     <button type="button" onclick="copyToClipboard('<?= $jadwal['tautan_video'] ?>', this)" class="text-gray-400 hover:text-blue-600 focus:outline-none transition group relative" title="Copy Link">
+                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                     </button>
+
+                                     <span class="copy-feedback text-xs text-green-600 font-bold opacity-0 transition-opacity duration-300 pointer-events-none">
+                                         Disalin!
+                                     </span>
+                                 </div>
                             <?php else: ?>
                                  <p class="text-xs text-gray-500 mt-1">Lokasi: Kantor Sekretariat PSB</p>
                             <?php endif; ?>
@@ -161,5 +179,26 @@
 <?php if(session()->getFlashdata('error')): ?>
     <script>alert("<?= session()->getFlashdata('error') ?>");</script>
 <?php endif; ?>
+
+<script>
+    function copyToClipboard(text, btnElement) {
+        // Menggunakan API Clipboard bawaan browser
+        navigator.clipboard.writeText(text).then(() => {
+            // Mengambil elemen <span> "Disalin!" yang ada tepat setelah tombol
+            const feedbackSpan = btnElement.nextElementSibling;
+            
+            // Tampilkan tulisan "Disalin!"
+            feedbackSpan.classList.remove('opacity-0');
+            
+            // Sembunyikan lagi setelah 2 detik
+            setTimeout(() => {
+                feedbackSpan.classList.add('opacity-0');
+            }, 2000);
+        }).catch(err => {
+            console.error('Gagal menyalin: ', err);
+            alert('Gagal menyalin link. Silakan copy secara manual.');
+        });
+    }
+</script>
 
 <?= $this->endSection() ?>

@@ -89,34 +89,37 @@
 
                     <?php if (($pembayaran['status_pembayaran'] ?? '') != 'Diterima'): ?>
 
-                        <form id="formAksi" action="<?= base_url('admin/verifikasiPembayaran') ?>" method="POST" class="space-y-5">
+                        <form id="formAksi" action="<?= base_url('admin/verifikasiPembayaran') ?>" method="POST" class="space-y-6">
                             <input type="hidden" name="id_pendaftar" value="<?= $pendaftar['id_pendaftar'] ?>">
 
-                            <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-slate-700">Status Verifikasi</label>
-                                <div class="relative">
-                                    <select name="status" id="status_bayar" onchange="toggleAlasan('status_bayar', 'alasan_bayar')" class="w-full appearance-none border border-slate-300 rounded-xl px-4 py-3 pr-8 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm font-medium text-slate-700 bg-white shadow-sm transition">
-                                        <option value="Menunggu" <?= ($pembayaran['status_pembayaran'] ?? '') == 'Menunggu' ? 'selected' : '' ?>>⏳ Menunggu Verifikasi</option>
-                                        <option value="Diterima">✅ Terima / Lunas</option>
-                                        <option value="Ditolak" <?= ($pembayaran['status_pembayaran'] ?? '') == 'Ditolak' ? 'selected' : '' ?>>❌ Tolak / Salah</option>
+                            <div class="space-y-3">
+                                <label for="status_bayar" class="block text-sm font-bold text-slate-700 tracking-wide uppercase">Status Verifikasi</label>
+                                <div class="relative group">
+                                    <select name="status" id="status_bayar" onchange="toggleAlasan('status_bayar', 'alasan_bayar')" class="w-full appearance-none border-2 border-slate-200 rounded-xl px-5 py-3.5 pr-10 focus:ring-0 focus:border-amber-500 text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-white hover:border-slate-300 transition-colors shadow-sm cursor-pointer outline-none">
+                                        <option value="Menunggu" <?= ($pembayaran['status_pembayaran'] ?? '') == 'Menunggu' ? 'selected' : '' ?>>Menunggu Verifikasi</option>
+                                        <option value="Diterima">Terima / Lunas</option>
+                                        <option value="Ditolak" <?= ($pembayaran['status_pembayaran'] ?? '') == 'Ditolak' ? 'selected' : '' ?>>Tolak / Salah</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400 group-hover:text-amber-500 transition-colors">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
                                         </svg>
                                     </div>
                                 </div>
                             </div>
 
-                            <div id="alasan_bayar" class="<?= ($pembayaran['status_pembayaran'] ?? '') == 'Ditolak' ? '' : 'hidden' ?> animate-fadeIn">
-                                <label class="block text-sm font-semibold text-red-600 mb-2">Alasan Penolakan <span class="text-red-400">*</span></label>
+                            <div id="alasan_bayar" class="<?= ($pembayaran['status_pembayaran'] ?? '') == 'Ditolak' ? '' : 'hidden' ?> transition-all duration-300 ease-in-out">
+                                <label class="block text-sm font-bold text-red-600 mb-2 uppercase tracking-wide">Alasan Penolakan <span class="text-red-500">*</span></label>
                                 <textarea name="keterangan" rows="3"
-                                    class="w-full border border-red-200 bg-red-50 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-red-500 focus:border-red-500 placeholder-red-300/80 font-light"
-                                    placeholder="Contoh: Bukti transfer tidak terbaca atau nominal tidak sesuai..."><?= (strpos(strtolower($pembayaran['keterangan'] ?? ''), 'menunggu') !== false) ? '' : esc($pembayaran['keterangan'] ?? '') ?></textarea>
+                                    class="w-full border-2 border-red-100 bg-red-50/50 rounded-xl px-5 py-3.5 text-sm text-slate-700 focus:ring-0 focus:border-red-400 placeholder-red-300 font-medium transition-colors outline-none resize-none shadow-sm"
+                                    placeholder="Tuliskan alasan penolakan dengan jelas (contoh: Bukti transfer buram)..."><?= (strpos(strtolower($pembayaran['keterangan'] ?? ''), 'menunggu') !== false) ? '' : esc($pembayaran['keterangan'] ?? '') ?></textarea>
                             </div>
 
-                            <div class="pt-2">
-                                <button type="button" onclick="openModalKonfirmasi()" class="w-full bg-amber-500 text-white font-bold py-3.5 rounded-xl hover:bg-amber-600 transition-all shadow-md hover:shadow-lg active:scale-95 text-sm tracking-wide">
+                            <div class="pt-4 border-t border-slate-100">
+                                <button type="button" onclick="openModalKonfirmasi()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold py-3.5 rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 text-sm tracking-widest uppercase flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
                                     Simpan Verifikasi
                                 </button>
                             </div>
@@ -194,31 +197,34 @@
                         <input type="hidden" name="id_pendaftar" value="<?= $pendaftar['id_pendaftar'] ?>">
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                            <div>
-                                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 mb-2 block">Status Kelengkapan</label>
-                                <div class="relative">
-                                    <select name="status" id="status_berkas" onchange="toggleAlasan('status_berkas', 'alasan_berkas')" class="w-full bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-12 pl-4 pr-10 shadow-sm appearance-none transition-all cursor-pointer">
-                                        <option value="Menunggu" <?= ($berkas['status_berkas'] ?? '') == 'Menunggu' ? 'selected' : '' ?>>⏳ Menunggu Verifikasi</option>
-                                        <option value="Diterima">✅ Berkas Lengkap & Valid</option>
-                                        <option value="Ditolak" <?= ($berkas['status_berkas'] ?? '') == 'Ditolak' ? 'selected' : '' ?>>❌ Berkas Salah / Tidak Lengkap</option>
+                            <div class="w-full">
+                                <label for="status_berkas" class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-2 block">Status Kelengkapan</label>
+                                <div class="relative group">
+                                    <select name="status" id="status_berkas" onchange="toggleAlasan('status_berkas', 'alasan_berkas')" class="w-full appearance-none border-2 border-slate-200 rounded-xl px-5 py-3.5 pr-10 focus:ring-0 focus:border-purple-500 text-sm font-semibold text-slate-700 bg-white hover:border-slate-300 transition-colors shadow-sm cursor-pointer outline-none">
+                                        <option value="Menunggu" <?= ($berkas['status_berkas'] ?? '') == 'Menunggu' ? 'selected' : '' ?>>Menunggu Verifikasi</option>
+                                        <option value="Diterima">Berkas Lengkap & Valid</option>
+                                        <option value="Ditolak" <?= ($berkas['status_berkas'] ?? '') == 'Ditolak' ? 'selected' : '' ?>>Berkas Salah / Tidak Lengkap</option>
                                     </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400 group-hover:text-purple-500 transition-colors">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
                                         </svg>
                                     </div>
                                 </div>
                             </div>
 
-                            <button type="button" onclick="openModalKonfirmasi()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-purple-200 hover:shadow-purple-300 uppercase tracking-wider text-sm active:scale-95">
+                            <button type="button" onclick="openModalKonfirmasi()" class="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                                 Simpan Verifikasi
                             </button>
                         </div>
 
-                        <div id="alasan_berkas" class="<?= ($berkas['status_berkas'] ?? '') == 'Ditolak' ? '' : 'hidden' ?> animate-fadeIn">
-                            <label class="text-xs font-bold text-red-500 uppercase tracking-wider ml-1 mb-2 block">Keterangan Ditolak</label>
+                        <div id="alasan_berkas" class="<?= ($berkas['status_berkas'] ?? '') == 'Ditolak' ? '' : 'hidden' ?> transition-all duration-300 ease-in-out">
+                            <label class="text-xs font-bold text-red-600 uppercase tracking-wider ml-1 mb-2 block">Keterangan Ditolak <span class="text-red-500">*</span></label>
                             <textarea name="keterangan" rows="3"
-                                class="w-full border-gray-300 rounded-xl p-4 text-sm text-gray-700 focus:ring-2 focus:ring-red-500 focus:border-red-500 shadow-sm placeholder-gray-400"
+                                class="w-full border-2 border-red-100 bg-red-50/50 rounded-xl px-5 py-3.5 text-sm text-slate-700 focus:ring-0 focus:border-red-400 placeholder-red-300 font-medium transition-colors outline-none resize-none shadow-sm"
                                 placeholder="Contoh: Pas foto harus berlatar belakang merah, scan ijazah kurang jelas..."><?= (strpos(strtolower($berkas['keterangan'] ?? ''), 'menunggu') !== false) ? '' : esc($berkas['keterangan'] ?? '') ?></textarea>
                         </div>
                     </form>
@@ -230,7 +236,7 @@
                             </svg>
                         </div>
                         <h4 class="font-bold text-emerald-900 text-xl tracking-tight mb-1">Administrasi Berkas Selesai</h4>
-                        <p class="text-emerald-700 text-sm font-medium">Seluruh dokumen telah diverifikasi dan dinyatakan valid oleh sistem.</p>
+                        <p class="text-emerald-700 text-sm font-medium">Seluruh dokumen telah diverifikasi dan dinyatakan valid oleh admin.</p>
                     </div>
                 <?php endif; ?>
             </div>

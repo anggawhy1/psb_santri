@@ -52,7 +52,7 @@
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <h3 class="text-2xl font-bold text-emerald-800 mb-2">Berkas Lengkap & Valid!</h3>
-                <p class="text-emerald-700">Seluruh dokumen persyaratan telah diperiksa dan disetujui oleh Panitia PSB.</p>
+                <p class="text-emerald-700">Seluruh dokumen persyaratan telah diperiksa dan disetujui oleh Admin.</p>
                 <div class="mt-6">
                     <a href="<?= base_url('pendaftar/status') ?>" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition shadow-md text-sm">
                         Cek Status Pendaftaran
@@ -99,18 +99,15 @@
         <?php if($status_verifikasi != 'Diterima'): ?>
             <div class="space-y-8">
                 <?php 
+                    // PERBAIKAN: Susunan array berkas diubah, ktp_pendaftar dimasukkan langsung tanpa syarat if($is_mahasiswa)
                     $daftar_berkas = [
                         ['id' => 'akta_kelahiran', 'label' => 'Akta Kelahiran'],
                         ['id' => 'kartu_keluarga', 'label' => 'Kartu Keluarga (KK)'],
                         ['id' => 'ktp_ortu', 'label' => 'KTP Orang Tua / Wali'],
+                        ['id' => 'ktp_pendaftar', 'label' => 'KTP / KTM Calon Santri', 'note' => 'KTP untuk mahasiswa, dan KTM untuk pelajar'],
+                        ['id' => 'ijazah_raport', 'label' => 'Ijazah / Raport Terakhir'],
+                        ['id' => 'pas_foto', 'label' => 'Pas Foto (3x4)', 'note' => 'Latar belakang merah/biru'],
                     ];
-
-                    if($is_mahasiswa) {
-                        $daftar_berkas[] = ['id' => 'ktp_pendaftar', 'label' => 'KTP Calon Santri', 'note' => '(Khusus Mahasiswa)'];
-                    }
-
-                    $daftar_berkas[] = ['id' => 'ijazah_raport', 'label' => 'Ijazah / Raport Terakhir'];
-                    $daftar_berkas[] = ['id' => 'pas_foto', 'label' => 'Pas Foto (3x4)', 'note' => 'Latar belakang merah/biru'];
 
                     foreach($daftar_berkas as $row):
                 ?>

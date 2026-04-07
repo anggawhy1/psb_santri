@@ -18,11 +18,22 @@
                     </svg>
                 </div>
 
-                <button type="button" onclick="toggleFilter()" class=" text-gray-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 border border-gray-300 flex items-center gap-2">
+                <?php
+                // Cek apakah ada filter yang sedang aktif (selain keyword)
+                $isFilterActive = !empty($f_bayar) || !empty($f_berkas) || !empty($f_jadwal);
+                ?>
+                <button type="button" onclick="toggleFilter()" class="relative text-gray-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 border border-gray-300 flex items-center gap-2 <?= $isFilterActive ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100' : '' ?>">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                     </svg>
                     Filter
+
+                    <?php if ($isFilterActive): ?>
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                    <?php endif; ?>
                 </button>
             </form>
         </div>
@@ -172,7 +183,7 @@
                                         <?php if ($row['status_pembayaran'] == 'Menunggu'): ?>
                                             <a href="<?= base_url('admin/viewPembayaran/' . $row['id_pendaftar']) ?>" class="bg-yellow-500 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-yellow-600 transition shadow-sm inline-block w-28 text-center">Verif Bayar</a>
                                         <?php elseif ($row['status_pembayaran'] == 'Ditolak'): ?>
-                                            <span class="text-xs text-red-500 font-medium italic">Menunggu Revisi</span>
+                                            <span class="text-xs text-red-500 font-medium italic">Menunggu Upload Ulang</span>
                                         <?php else: ?>
                                             <span class="text-[10px] text-gray-400 font-medium italic border border-gray-200 px-2 py-1 rounded bg-gray-50">Menunggu Upload</span>
                                         <?php endif; ?>
@@ -181,7 +192,7 @@
                                         <?php if ($row['status_berkas'] == 'Menunggu'): ?>
                                             <a href="<?= base_url('admin/viewBerkas/' . $row['id_pendaftar']) ?>" class="bg-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-purple-700 transition shadow-sm inline-block w-28 text-center">Verif Berkas</a>
                                         <?php elseif ($row['status_berkas'] == 'Ditolak'): ?>
-                                            <span class="text-xs text-red-500 font-medium italic">Menunggu Revisi</span>
+                                            <span class="text-xs text-red-500 font-medium italic">Menunggu Upload Ulang</span>
                                         <?php else: ?>
                                             <span class="text-[10px] text-gray-400 font-medium italic border border-gray-200 px-2 py-1 rounded bg-gray-50">Menunggu Upload</span>
                                         <?php endif; ?>

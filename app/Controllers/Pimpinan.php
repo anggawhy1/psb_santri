@@ -17,7 +17,7 @@ class Pimpinan extends BaseController
     {
         $this->pendaftarModel  = new PendaftarModel();
         $this->pembayaranModel = new PembayaranModel();
-        $this->userModel       = new UsersModel(); 
+        $this->userModel       = new UsersModel();
     }
 
     // =========================================================================
@@ -25,31 +25,58 @@ class Pimpinan extends BaseController
     // =========================================================================
     public function dashboard()
     {
+        $db = \Config\Database::connect();
+
         // 1. Data Cards
         $totalPendaftar = $this->pendaftarModel->countAllResults();
         $totalBayar     = $this->pembayaranModel->where('status_pembayaran', 'Diterima')->countAllResults();
+
+        // PERBAIKAN: Menghitung yang JADWALNYA UDAH ADA TAPI STATUS KELULUSAN MASIH KOSONG
+        $queryWawancara = $db->query("
+            SELECT COUNT(p.id_pendaftar) as total 
+            FROM pendaftar p
+            JOIN jadwal_wawancara j ON p.id_pendaftar = j.id_pendaftar
+            WHERE p.status_akhir IS NULL 
+               OR p.status_akhir = '' 
+               OR p.status_akhir = 'Menunggu'
+        ");
+        $totalWawancara = $queryWawancara->getRow()->total;
+
         $totalLulus     = $this->pendaftarModel->where('status_akhir', 'Lulus')->countAllResults();
         $totalGagal     = $this->pendaftarModel->where('status_akhir', 'Tidak Lulus')->countAllResults();
 
         // 2. Data Pie Chart
-        $db = \Config\Database::connect();
-        $queryPie = $db->query("SELECT program_pilihan, COUNT(*) as jumlah FROM pendaftar GROUP BY program_pilihan");
+        $queryPie = $db->query("SELECT program_pilihan, COUNT(id_pendaftar) as jumlah FROM pendaftar GROUP BY program_pilihan");
         $pieData = $queryPie->getResultArray();
 
-        // 3. Data Line Chart
+        // 3. Data Bar Chart (10 hari aktif terakhir)
         $queryLine = $db->query("
-            SELECT DATE(created_at) as tanggal, COUNT(*) as jumlah 
-            FROM pendaftar 
-            WHERE created_at >= DATE(NOW()) - INTERVAL 7 DAY 
-            GROUP BY DATE(created_at)
+            SELECT tgl, jumlah FROM (
+                SELECT DATE(created_at) as tgl, COUNT(id_pendaftar) as jumlah 
+                FROM pendaftar 
+                WHERE created_at IS NOT NULL 
+                GROUP BY DATE(created_at)
+                ORDER BY DATE(created_at) DESC
+                LIMIT 10
+            ) as subquery
+            ORDER BY tgl ASC
         ");
-        $lineData = $queryLine->getResultArray();
+        $grafik_data = $queryLine->getResultArray();
+
+        $lineData = [];
+        foreach ($grafik_data as $g) {
+            $lineData[] = [
+                'tanggal' => date('d M Y', strtotime($g['tgl'])),
+                'jumlah'  => $g['jumlah']
+            ];
+        }
 
         $data = [
             'title' => 'Dashboard Pimpinan',
             'stats' => [
                 'pendaftar' => $totalPendaftar,
                 'bayar'     => $totalBayar,
+                'wawancara' => $totalWawancara,
                 'lulus'     => $totalLulus,
                 'gagal'     => $totalGagal
             ],
@@ -128,7 +155,7 @@ class Pimpinan extends BaseController
     private function _getCompleteData($id)
     {
         $db = \Config\Database::connect();
-        
+
         // Cek data utama
         $pendaftar = $this->pendaftarModel->find($id);
         if (!$pendaftar) {
@@ -148,30 +175,55 @@ class Pimpinan extends BaseController
     }
 
     // LIST PENDAFTAR AKTIF (Monitoring)
+    // LIST PENDAFTAR AKTIF (Monitoring)
     public function pendaftar()
     {
-        $db = \Config\Database::connect();
-        $builder = $db->table('pendaftar');
-        
-        $builder->select('pendaftar.*, data_pendidikan.asal_sekolah');
-        $builder->join('data_pendidikan', 'data_pendidikan.id_pendaftar = pendaftar.id_pendaftar', 'left');
-        
+        // 1. Ambil keyword dan parameter filter dari URL
+        $keyword = $this->request->getGet('keyword');
+        $status_wawancara = $this->request->getGet('status_wawancara'); // Ambil filter wawancara
+
+        // Gunakan Model langsung untuk mendeteksi pagination
+        $model = $this->pendaftarModel;
+
+        $model->select('pendaftar.*, data_pendidikan.asal_sekolah, jadwal_wawancara.tanggal_wawancara, jadwal_wawancara.tautan_video');
+        $model->join('data_pendidikan', 'data_pendidikan.id_pendaftar = pendaftar.id_pendaftar', 'left');
+        $model->join('jadwal_wawancara', 'jadwal_wawancara.id_pendaftar = pendaftar.id_pendaftar', 'left');
+
         // Hanya yang status akhirnya belum diputuskan
-        $builder->where('pendaftar.status_akhir', 'Menunggu');
-        
+        $model->where('pendaftar.status_akhir', 'Menunggu');
+
+        // 2. Logika Filter Pencarian
+        if ($keyword) {
+            $model->groupStart()
+                ->like('pendaftar.nama_lengkap', $keyword)
+                ->orLike('pendaftar.no_registrasi', $keyword)
+                ->groupEnd();
+        }
+
+        // 3. Logika Filter Wawancara Dijadwalkan
+        if ($status_wawancara === 'Dijadwalkan') {
+            // Memfilter hanya yang tanggal wawancaranya sudah terisi
+            $model->where('jadwal_wawancara.tanggal_wawancara IS NOT NULL');
+        }
+
         $data = [
-            'title' => 'Monitoring Data Pendaftar',
-            'data'  => $builder->get()->getResultArray()
+            'title'            => 'Monitoring Data Pendaftar',
+            'data'             => $model->paginate(10, 'pendaftar'), // Ubah jadi paginate
+            'pager'            => $model->pager,                     // Kirim pager ke view
+            'keyword'          => $keyword,
+            'status_wawancara' => $status_wawancara              // Kirim status filter
         ];
+
         return view('pimpinan/pendaftar_list', $data);
     }
 
     // LIST RIWAYAT (Arsip)
     public function riwayat()
     {
-        // 1. Ambil keyword DAN parameter sort
+        // 1. Ambil keyword, sort, DAN status dari URL
         $keyword = $this->request->getGet('keyword');
-        $sort    = $this->request->getGet('sort'); // <--- TAMBAHAN 1
+        $sort    = $this->request->getGet('sort');
+        $status  = $this->request->getGet('status'); // <--- TAMBAHAN UNTUK FILTER KELULUSAN
 
         // Gunakan Model langsung (agar pagination mendeteksi filter)
         // Jangan pakai ->builder() terpisah agar paginate jalan normal
@@ -181,10 +233,17 @@ class Pimpinan extends BaseController
         $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
 
-        // Filter Status Akhir (Hanya yang sudah selesai)
-        $model->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
+        // 2. Filter Status Kelulusan (Dinamis)
+        if ($status === 'Lulus') {
+            $model->where('pendaftar.status_akhir', 'Lulus');
+        } elseif ($status === 'Tidak Lulus') {
+            $model->where('pendaftar.status_akhir', 'Tidak Lulus');
+        } else {
+            // Default: Tampilkan semua yang prosesnya sudah selesai (Lulus & Tidak Lulus)
+            $model->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
+        }
 
-        // Fitur Search (Nama & No Reg)
+        // 3. Fitur Search (Nama & No Reg)
         if ($keyword) {
             $model->groupStart()
                 ->like('pendaftar.nama_lengkap', $keyword)
@@ -206,10 +265,11 @@ class Pimpinan extends BaseController
             'data'    => $model->paginate(10, 'pendaftar'),
             'pager'   => $model->pager,
             'keyword' => $keyword,
-            'sort'    => $sort ? $sort : 'newest' // <--- TAMBAHAN 3: Kirim status sort ke View
+            'sort'    => $sort ? $sort : 'newest',
+            'status'  => $status // <--- INI DIA PENYELAMATNYA! Tambahkan baris ini
         ];
 
-        return view('pimpinan/riwayat_list', $data);
+        return view('admin/pendaftar/riwayat', $data);
     }
 
     // VIEW DETAIL SANTRI (Untuk Monitoring Aktif)
@@ -219,9 +279,9 @@ class Pimpinan extends BaseController
             $data = $this->_getCompleteData($id);
             $data['title'] = 'Detail Data Santri';
             $data['is_riwayat'] = false; // Flag: Ini data aktif
-            
+
             // Arahkan ke view khusus pimpinan (Read Only)
-            return view('pimpinan/detail_santri', $data); 
+            return view('pimpinan/detail_santri', $data);
         } catch (\Exception $e) {
             return redirect()->to('pimpinan/pendaftar')->with('error', 'Data tidak ditemukan.');
         }
@@ -234,7 +294,7 @@ class Pimpinan extends BaseController
             $data = $this->_getCompleteData($id);
             $data['title'] = 'Arsip Data Santri';
             $data['is_riwayat'] = true; // Flag: Ini data riwayat/arsip
-            
+
             // Gunakan view yang sama, tapi nanti tombol "Kembali" nya beda arah
             return view('pimpinan/detail_santri', $data);
         } catch (\Exception $e) {

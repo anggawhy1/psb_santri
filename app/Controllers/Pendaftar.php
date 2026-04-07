@@ -39,12 +39,41 @@ class Pendaftar extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('login');
 
-        $pendaftar = $this->pendaftarModel->find($this->id_pendaftar);
+        // Gunakan Query Builder agar kita bisa menarik data dari semua tabel terkait
+        $db = \Config\Database::connect();
 
+        // Asumsi $this->id_pendaftar sudah didefinisikan di BaseController/konstruktor Anda
+        $id = $this->id_pendaftar;
+
+        // 1. Ambil data dari tabel formulir
+        $pendaftar  = $db->table('pendaftar')->where('id_pendaftar', $id)->get()->getRowArray();
+        $pendidikan = $db->table('data_pendidikan')->where('id_pendaftar', $id)->get()->getRowArray();
+        $kesehatan  = $db->table('data_kesehatan')->where('id_pendaftar', $id)->get()->getRowArray();
+        // BENAR
+        $ortu = $db->table('data_orang_tua')->where('id_pendaftar', $id)->get()->getResultArray();
+
+        // 2. Ambil data status tahapan agar sinkron dengan halaman Status
+        $bayar  = $db->table('pembayaran')->where('id_pendaftar', $id)->get()->getRowArray();
+        $berkas = $db->table('berkas')->where('id_pendaftar', $id)->get()->getRowArray();
+        $jadwal = $db->table('jadwal_wawancara')->where('id_pendaftar', $id)->get()->getRowArray();
+
+        // 3. TAMBAHAN: Ambil data Tahun Ajaran dari tabel informasi_psb
+        $info_tahun = $db->table('informasi_psb')->where('id_informasi', 1)->get()->getRowArray();
+        $tahun_psb  = $info_tahun ? $info_tahun['isi'] : '2025/2026';
+
+        // 4. Kirim semua data ke View dengan nama variabel yang tepat
         $data = [
-            'title' => 'Dashboard Utama',
-            'user'  => $pendaftar
+            'title'      => 'Dashboard Utama',
+            'pendaftar'  => $pendaftar,
+            'pendidikan' => $pendidikan,
+            'kesehatan'  => $kesehatan,
+            'ortu'       => $ortu,
+            'bayar'      => $bayar,
+            'berkas'     => $berkas,
+            'jadwal'     => $jadwal,
+            'tahun_psb'  => $tahun_psb // <-- Lempar variabel ini ke View
         ];
+
         return view('pendaftar/dashboard', $data);
     }
 
@@ -178,34 +207,5 @@ class Pendaftar extends BaseController
             'jadwal'    => $this->jadwalModel->where('id_pendaftar', $this->id_pendaftar)->first(), // Ambil Jadwal
         ];
         return view('pendaftar/status', $data);
-    }
-
-    // TAMBAHAN METHOD BARU: CETAK KARTU
-    public function cetakKartu()
-    {
-        if (!session()->get('isLoggedIn')) return redirect()->to('login');
-
-        // Cek Syarat: Harus Lunas & Berkas Diterima baru bisa cetak
-        $bayar = $this->pembayaranModel->where('id_pendaftar', $this->id_pendaftar)->first();
-        $berkas = $this->berkasModel->where('id_pendaftar', $this->id_pendaftar)->first();
-
-        // Logika Validasi Cetak (Bisa disesuaikan)
-        // Kalau mau longgar (asal daftar boleh cetak), hapus if ini.
-        // Tapi biasanya kartu ujian baru keluar kalau admin sudah ACC berkas.
-        if (
-            !$bayar || $bayar['status_pembayaran'] != 'Diterima' ||
-            !$berkas || $berkas['status_berkas'] != 'Diterima'
-        ) {
-            return redirect()->to('pendaftar/status')->with('error', 'Maaf, Kartu Pendaftaran belum bisa dicetak. Pastikan Pembayaran LUNAS dan Berkas DIVERIFIKASI Admin.');
-        }
-
-        $data = [
-            'title'      => 'Cetak Kartu Peserta',
-            'pendaftar'  => $this->pendaftarModel->find($this->id_pendaftar),
-            'pendidikan' => $this->pendidikanModel->where('id_pendaftar', $this->id_pendaftar)->first(),
-            'berkas'     => $berkas // Buat ambil foto
-        ];
-
-        return view('pendaftar/cetak_kartu', $data);
     }
 }

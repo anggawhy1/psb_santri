@@ -29,18 +29,39 @@
 
                 <div class="mb-8">
                     <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Judul <?= ucfirst($type) ?> <span class="text-red-500">*</span></label>
-                    <input type="text" name="judul" value="<?= $mode=='edit' ? esc($row['judul']) : '' ?>" required class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition placeholder-gray-400 font-medium" placeholder="Contoh: Kegiatan Santri Menyambut Ramadhan...">
+                    <input type="text" name="judul" value="<?= $mode=='edit' ? esc($row['judul']) : '' ?>" required class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition placeholder-gray-400 font-medium" placeholder="Contoh: <?= $type == 'prestasi' ? 'Juara 1 Lomba Tahfidz' : 'Kegiatan Santri Menyambut Ramadhan...' ?>">
                 </div>
 
+                <?php if ($type !== 'galeri'): ?>
                 <div class="mb-8">
-                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Deskripsi / Konten <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                        Deskripsi / Konten 
+                        <?php if ($type === 'prestasi'): ?>
+                            <span class="text-gray-400 font-normal normal-case text-xs ml-1">(Opsional)</span>
+                        <?php else: ?>
+                            <span class="text-red-500">*</span>
+                        <?php endif; ?>
+                    </label>
                     <div class="relative">
-                        <textarea name="deskripsi" rows="8" required class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition placeholder-gray-400 text-sm leading-relaxed" placeholder="Tuliskan detail lengkap mengenai konten ini..."><?= $mode=='edit' ? esc($row['deskripsi']) : '' ?></textarea>
+                        <textarea name="deskripsi" 
+                            rows="<?= $type === 'prestasi' ? '3' : '8' ?>" 
+                            <?= $type !== 'prestasi' ? 'required' : '' ?> 
+                            <?= $type === 'prestasi' ? 'maxlength="50"' : '' ?>
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition placeholder-gray-400 text-sm leading-relaxed" 
+                            placeholder="<?= $type === 'prestasi' ? 'Tulis keterangan singkat (Maksimal 50 karakter)...' : 'Tuliskan detail lengkap mengenai konten ini...' ?>"><?= $mode=='edit' ? esc($row['deskripsi']) : '' ?></textarea>
+                        
                         <div class="absolute top-3 right-3 text-gray-400 pointer-events-none">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </div>
+
+                        <?php if ($type === 'prestasi'): ?>
+                            <p class="text-[10px] text-gray-400 mt-1 absolute right-0 -bottom-5">Maksimal 50 karakter</p>
+                        <?php endif; ?>
                     </div>
                 </div>
+                <?php else: ?>
+                    <input type="hidden" name="deskripsi" value="">
+                <?php endif; ?>
 
                 <div class="mb-10">
                     <label class="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wide">Gambar Utama <?= $mode=='add' ? '<span class="text-red-500">*</span>' : '' ?></label>
@@ -98,16 +119,15 @@
 <script>
     function previewImage(input) {
         const preview = document.getElementById('img-preview');
-        const container = input.closest('label'); // Ambil label pembungkus
-        const placeholder = container.querySelector('div.flex-col'); // Ambil elemen placeholder (icon+teks)
+        const container = input.closest('label'); 
+        const placeholder = container.querySelector('div.flex-col'); 
 
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             
             reader.onload = function(e) {
                 preview.src = e.target.result;
-                preview.classList.remove('opacity-0'); // Munculkan gambar
-                // Opsional: Sembunyikan placeholder biar gak numpuk visualnya (tapi tetep ada di DOM)
+                preview.classList.remove('opacity-0'); 
                 placeholder.classList.add('opacity-0'); 
             }
             

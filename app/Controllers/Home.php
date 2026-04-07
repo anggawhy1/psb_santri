@@ -16,8 +16,19 @@ class Home extends BaseController
 
     public function index()
     {
+        $db = \Config\Database::connect();
+
+        // PERBAIKAN: Pakai 'id_informasi' sesuai gambar phpMyAdmin kamu
+        $info_tahun = $db->table('informasi_psb')
+            ->where('id_informasi', 1)
+            ->get()
+            ->getRowArray();
+
+        $tahun_psb = $info_tahun ? $info_tahun['isi'] : '2026/2027';
+
         $data = [
             'title' => 'Selamat Datang | PSB Online',
+            'tahun_psb' => $tahun_psb,
             'berita_terbaru' => $this->promosiModel
                 ->where('type', 'berita')
                 ->orderBy('created_at', 'DESC')
@@ -37,7 +48,20 @@ class Home extends BaseController
 
     public function psb()
     {
-        $data = ['title' => 'Info Pendaftaran | Ponpes Banyu Agung Ibnu Saut Bintoro'];
+        $db = \Config\Database::connect();
+
+        $info_tahun = $db->table('informasi_psb')
+            ->where('id_informasi', 1)
+            ->get()
+            ->getRowArray();
+
+        $tahun_psb = $info_tahun ? $info_tahun['isi'] : '2025/2026';
+
+        $data = [
+            'title'     => 'Info Pendaftaran | Ponpes Banyu Agung Ibnu Saut Bintoro',
+            'tahun_psb' => $tahun_psb // Lempar variabel ke view psb
+        ];
+
         return view('psb', $data);
     }
 
@@ -109,7 +133,7 @@ class Home extends BaseController
             'galeri' => $this->promosiModel->where('type', 'galeri')
                 ->orderBy('created_at', 'DESC')
                 ->paginate(9, 'galeri'),
-            'pager' => $this->promosiModel->pager 
+            'pager' => $this->promosiModel->pager
         ];
         return view('galeri', $data);
     }

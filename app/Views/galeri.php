@@ -7,7 +7,7 @@
         <span class="text-emerald-300 font-bold tracking-widest uppercase text-sm mb-2 block">Publikasi</span>
         <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Galeri Kegiatan</h1>
         <p class="text-emerald-100 text-lg max-w-2xl mx-auto font-light">
-            Lensa Pondok: Dokumentasi visual aktivitas harian santri.
+            Dokumentasi visual aktivitas harian santri.
         </p>
     </div>
 </div>
@@ -17,42 +17,47 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-        <?php if(empty($galeri)): ?>
+        <?php if (empty($galeri)): ?>
             <div class="text-center py-24 bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">
                 <p class="text-slate-500 font-medium">Belum ada foto.</p>
             </div>
         <?php else: ?>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                <?php foreach($galeri as $item): ?>
-                
-                <div onclick="openModal('<?= base_url('uploads/konten/' . $item['path_gambar']) ?>', '<?= esc($item['judul']) ?>', '<?= date('d M Y', strtotime($item['created_at'])) ?>')" 
-                     class="group bg-white rounded-3xl overflow-hidden shadow-sm border border-emerald-100 cursor-pointer hover:shadow-xl hover:shadow-emerald-100/50 transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col">
-                    
-                    <div class="h-64 w-full relative overflow-hidden">
-                        <img src="<?= base_url('uploads/konten/' . $item['path_gambar']) ?>" 
-                             class="w-full h-full object-cover transition duration-700 group-hover:scale-110" 
-                             alt="<?= esc($item['judul']) ?>">
-                        
-                        <div class="absolute inset-0 bg-emerald-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <div class="bg-white/30 backdrop-blur-md p-3 rounded-full text-white transform scale-0 group-hover:scale-100 transition-transform duration-300">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+                <?php foreach ($galeri as $item): ?>
+
+                    <div onclick="openModal('<?= base_url('uploads/konten/' . $item['path_gambar']) ?>', '<?= esc($item['judul']) ?>', '<?= date('d M Y', strtotime($item['created_at'])) ?>')"
+                        class="group bg-white rounded-3xl overflow-hidden shadow-sm border border-emerald-100 cursor-pointer hover:shadow-xl hover:shadow-emerald-100/50 transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col">
+
+                        <div class="h-64 w-full relative overflow-hidden">
+                            <img src="<?= base_url('uploads/konten/' . $item['path_gambar']) ?>"
+                                class="w-full h-full object-cover transition duration-700 group-hover:scale-110"
+                                alt="<?= esc($item['judul']) ?>">
+
+                            <div class="absolute inset-0 bg-emerald-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <div class="bg-white/30 backdrop-blur-md p-3 rounded-full text-white transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                                    </svg>
+                                </div>
                             </div>
+
+                            <span class="absolute top-4 right-4 bg-emerald-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md z-10">Galeri</span>
                         </div>
 
-                        <span class="absolute top-4 right-4 bg-emerald-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md z-10">Galeri</span>
-                    </div>
-
-                    <div class="p-6 flex-1 flex flex-col justify-between">
-                        <h3 class="font-bold text-slate-800 text-lg leading-snug group-hover:text-emerald-600 transition mb-2 line-clamp-2">
-                            <?= esc($item['judul']) ?>
-                        </h3>
-                        <div class="text-slate-400 text-xs font-bold flex items-center gap-2 mt-auto">
-                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <?= date('d M Y', strtotime($item['created_at'])) ?>
+                        <div class="p-6 flex-1 flex flex-col justify-start">
+                            <div class="text-slate-400 text-xs font-bold flex items-center gap-2 mb-2">
+                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <?= date('d M Y', strtotime($item['created_at'])) ?>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-lg leading-snug group-hover:text-emerald-600 transition line-clamp-2">
+                                <?= esc($item['judul']) ?>
+                            </h3>
                         </div>
+
                     </div>
-                </div>
                 <?php endforeach; ?>
             </div>
 
@@ -63,51 +68,61 @@
             </div>
 
             <div id="imageModal" class="fixed inset-0 z-[9999] hidden" role="dialog" aria-modal="true">
-                
+
                 <div class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
 
                 <div class="fixed inset-0 z-[10000] overflow-y-auto">
                     <div class="flex min-h-full items-center justify-center p-4">
-                        
+
                         <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-md border-4 border-white">
-                            
+
                             <div class="bg-white px-5 py-4 border-b border-slate-100 flex justify-between items-start">
                                 <div>
                                     <h3 class="text-base font-bold text-slate-800 leading-tight pr-4" id="modalTitle">Judul Foto</h3>
                                     <p class="text-xs text-slate-400 mt-1 font-medium" id="modalDate">Tanggal</p>
                                 </div>
                                 <button onclick="closeModal()" type="button" class="bg-slate-100 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full p-2 transition focus:outline-none shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
                                 </button>
                             </div>
 
                             <div id="imageContainer" class="relative w-full h-80 bg-slate-100 overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing">
-                                
+
                                 <img id="modalImage" src="" alt="Detail Foto" draggable="false"
-                                     class="w-full h-full object-contain transition-transform duration-75 ease-linear origin-center select-none will-change-transform">
-                                
+                                    class="w-full h-full object-contain transition-transform duration-75 ease-linear origin-center select-none will-change-transform">
+
                                 <div class="absolute bottom-4 right-4 flex items-center gap-2 bg-white/80 backdrop-blur-sm p-1.5 rounded-full shadow-lg border border-slate-200 pointer-events-auto z-10">
                                     <button onclick="zoomOut()" class="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                        </svg>
                                     </button>
-                                    
+
                                     <button onclick="resetZoomManual()" class="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
                                     </button>
 
                                     <button onclick="zoomIn()" class="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
 
-                             <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex justify-end">
+                            <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex justify-end">
                                 <a id="downloadLink" href="#" download class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
                                     Unduh Foto
                                 </a>
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -116,6 +131,29 @@
         <?php endif; ?>
     </div>
 </div>
+
+<section class="relative py-24 bg-emerald-900 overflow-hidden">
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-emerald-800 rounded-full blur-3xl opacity-50"></div>
+    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-teal-800 rounded-full blur-3xl opacity-50"></div>
+
+    <div class="relative max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">Mari Bergabung Bersama Kami</h2>
+        <p class="text-emerald-100 text-lg mb-10 max-w-2xl mx-auto">
+            Wujudkan impian ananda menjadi generasi Qur'ani yang cerdas intelektual-spiritual dan beradab mulia di Pondok Pesantren Banyu Agung Ibnu Saut Bintoro.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="https://wa.me/6281234567890" target="_blank" class="bg-transparent border-2 border-emerald-400 text-emerald-100 px-10 py-4 rounded-full font-bold text-lg hover:bg-emerald-800 hover:text-white transition flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+                </svg>
+                Hubungi Admin
+            </a>
+            <a href="<?= base_url('psb') ?>" class="bg-white text-emerald-900 px-10 py-4 rounded-full font-bold text-lg hover:bg-emerald-50 transition shadow-xl transform hover:-translate-y-1">
+                Daftar Sekarang
+            </a>
+        </div>
+    </div>
+</section>
 
 <script>
     let state = {
@@ -152,18 +190,18 @@
         elements.title.innerText = title;
         elements.date.innerText = date;
         elements.download.href = src;
-        
+
         elements.modal.classList.remove('hidden');
         setTimeout(() => {
             elements.modal.querySelector('.transform').classList.add('scale-100');
             elements.modal.querySelector('.transform').classList.remove('scale-95');
         }, 10);
-        document.body.style.overflow = 'hidden'; 
+        document.body.style.overflow = 'hidden';
     }
 
     function closeModal() {
         elements.modal.classList.add('hidden');
-        document.body.style.overflow = 'auto'; 
+        document.body.style.overflow = 'auto';
     }
 
     function updateTransform() {
@@ -180,7 +218,7 @@
         state.pY = Math.min(Math.max(state.pY, -rangeY), rangeY);
 
         elements.img.style.transform = `translate(${state.pX}px, ${state.pY}px) scale(${state.scale})`;
-        
+
         if (state.scale > 1) {
             elements.container.style.cursor = state.isDragging ? 'grabbing' : 'grab';
         } else {
@@ -231,7 +269,7 @@
 
     window.addEventListener('mouseup', () => {
         state.isDragging = false;
-        if(state.scale > 1) elements.container.style.cursor = 'grab';
+        if (state.scale > 1) elements.container.style.cursor = 'grab';
     });
 
     document.addEventListener('keydown', (e) => {

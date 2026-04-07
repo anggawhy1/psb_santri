@@ -44,7 +44,73 @@ class Admin extends BaseController
         if (!session()->get('isLoggedIn') || (session()->get('role') != 'admin' && session()->get('role') != 'pimpinan')) {
             return redirect()->to('admin/login');
         }
-        return view('admin/dashboard', ['title' => 'Dashboard Admin']);
+
+        $db = \Config\Database::connect();
+
+        $wait_bayar = $db->table('pembayaran')->where('status_pembayaran', 'Menunggu')->countAllResults();
+        $wait_berkas = $db->table('berkas')->where('status_berkas', 'Menunggu')->countAllResults();
+
+        $query_wawancara = $db->query("
+            SELECT COUNT(p.id_pendaftar) as total 
+            FROM pendaftar p
+            JOIN pembayaran b ON p.id_pendaftar = b.id_pendaftar
+            JOIN berkas k ON p.id_pendaftar = k.id_pendaftar
+            LEFT JOIN jadwal_wawancara j ON p.id_pendaftar = j.id_pendaftar
+            WHERE b.status_pembayaran = 'Diterima' 
+              AND k.status_berkas = 'Diterima' 
+              AND j.id_pendaftar IS NULL
+        ");
+        $wait_wawancara = $query_wawancara->getRow()->total;
+
+        $query_hasil = $db->query("
+            SELECT COUNT(p.id_pendaftar) as total 
+            FROM pendaftar p
+            JOIN jadwal_wawancara j ON p.id_pendaftar = j.id_pendaftar
+            WHERE p.status_akhir IS NULL 
+               OR p.status_akhir = '' 
+               OR p.status_akhir = 'Menunggu'
+        ");
+        $wait_hasil = $query_hasil->getRow()->total;
+
+        $total_pendaftar = $db->table('pendaftar')->countAllResults();
+        $total_lulus = $db->table('pendaftar')->where('status_akhir', 'Lulus')->countAllResults();
+        $total_ditolak = $db->table('pendaftar')->where('status_akhir', 'Tidak Lulus')->countAllResults();
+
+        $grafik_query = $db->query("
+            SELECT tgl, jumlah FROM (
+                SELECT DATE(created_at) as tgl, COUNT(id_pendaftar) as jumlah
+                FROM pendaftar
+                WHERE created_at IS NOT NULL
+                GROUP BY DATE(created_at)
+                ORDER BY DATE(created_at) DESC
+                LIMIT 10
+            ) as subquery
+            ORDER BY tgl ASC
+        ");
+        $grafik_data = $grafik_query->getResultArray();
+
+        $label_grafik = [];
+        $data_grafik = [];
+        foreach ($grafik_data as $g) {
+            $label_grafik[] = date('d M Y', strtotime($g['tgl'])); // Contoh: 12 Nov 2023
+            $data_grafik[] = $g['jumlah'];
+        }
+
+        $data = [
+            'title'             => 'Dashboard Admin',
+            'wait_bayar'        => $wait_bayar,
+            'wait_berkas'       => $wait_berkas,
+            'wait_wawancara'    => $wait_wawancara,
+            'wait_hasil'        => $wait_hasil,
+            'total_pendaftar'   => $total_pendaftar,
+            'total_lulus'       => $total_lulus,
+            'total_ditolak'     => $total_ditolak,
+            // Lempar data grafik berbentuk JSON agar bisa dibaca Javascript
+            'label_grafik'      => json_encode($label_grafik),
+            'data_grafik'       => json_encode($data_grafik)
+        ];
+
+        return view('admin/dashboard', $data);
     }
 
     // --- MANAJEMEN KONTEN ---
@@ -347,9 +413,10 @@ class Admin extends BaseController
 
     public function riwayat()
     {
-        // 1. Ambil keyword DAN parameter sort
+        // 1. Ambil keyword, sort, DAN status dari URL
         $keyword = $this->request->getGet('keyword');
-        $sort    = $this->request->getGet('sort'); // <--- TAMBAHAN 1
+        $sort    = $this->request->getGet('sort');
+        $status  = $this->request->getGet('status'); // <--- TAMBAHAN UNTUK FILTER KELULUSAN
 
         // Gunakan Model langsung (agar pagination mendeteksi filter)
         // Jangan pakai ->builder() terpisah agar paginate jalan normal
@@ -359,10 +426,17 @@ class Admin extends BaseController
         $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
 
-        // Filter Status Akhir (Hanya yang sudah selesai)
-        $model->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
+        // 2. Filter Status Kelulusan (Dinamis)
+        if ($status === 'Lulus') {
+            $model->where('pendaftar.status_akhir', 'Lulus');
+        } elseif ($status === 'Tidak Lulus') {
+            $model->where('pendaftar.status_akhir', 'Tidak Lulus');
+        } else {
+            // Default: Tampilkan semua yang prosesnya sudah selesai (Lulus & Tidak Lulus)
+            $model->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
+        }
 
-        // Fitur Search (Nama & No Reg)
+        // 3. Fitur Search (Nama & No Reg)
         if ($keyword) {
             $model->groupStart()
                 ->like('pendaftar.nama_lengkap', $keyword)
@@ -384,7 +458,8 @@ class Admin extends BaseController
             'data'    => $model->paginate(10, 'pendaftar'),
             'pager'   => $model->pager,
             'keyword' => $keyword,
-            'sort'    => $sort ? $sort : 'newest' // <--- TAMBAHAN 3: Kirim status sort ke View
+            'sort'    => $sort ? $sort : 'newest',
+            'status'  => $status // <--- INI DIA PENYELAMATNYA! Tambahkan baris ini
         ];
 
         return view('admin/pendaftar/riwayat', $data);
@@ -487,13 +562,80 @@ class Admin extends BaseController
     public function updateDataPendaftar()
     {
         $id = $this->request->getPost('id_pendaftar');
+        $db = \Config\Database::connect();
+
+        // =======================================================
+        // 1. UPDATE TABEL PENDAFTAR (Data Diri)
+        // =======================================================
         $this->pendaftarModel->update($id, [
-            'nama_lengkap' => $this->request->getPost('nama_lengkap'),
-            'nik'          => $this->request->getPost('nik'),
-            'no_kk'        => $this->request->getPost('no_kk'),
-            'program_pilihan' => $this->request->getPost('program_pilihan')
+            'nama_lengkap'    => $this->request->getPost('nama_lengkap'),
+            'no_hp'           => $this->request->getPost('no_hp'),
+            'nik'             => $this->request->getPost('nik'),
+            'no_kk'           => $this->request->getPost('no_kk'),
+            'tempat_lahir'    => $this->request->getPost('tempat_lahir'),
+            'tanggal_lahir'   => $this->request->getPost('tanggal_lahir'),
+            'jenis_kelamin'   => $this->request->getPost('jenis_kelamin'),
+            'anak_ke'         => $this->request->getPost('anak_ke'),
+            'dari_bersaudara' => $this->request->getPost('dari_bersaudara'),
+            'program_pilihan' => $this->request->getPost('program_pilihan'),
+            'alamat_lengkap'  => $this->request->getPost('alamat_lengkap'),
         ]);
-        return redirect()->to('admin/viewFormulir/' . $id)->with('success', 'Data diubah.');
+
+        // =======================================================
+        // 2. UPDATE TABEL DATA PENDIDIKAN
+        // =======================================================
+        // Catatan: name di form adalah 'status_pendidikan', disimpan ke kolom 'status'
+        $db->table('data_pendidikan')->where('id_pendaftar', $id)->update([
+            'status'                      => $this->request->getPost('status_pendidikan'),
+            'nama_pt'                     => $this->request->getPost('nama_pt'),
+            'nisn'                        => $this->request->getPost('nisn'),
+            'asal_sekolah'                => $this->request->getPost('asal_sekolah'),
+            'kelas_terakhir'              => $this->request->getPost('kelas_terakhir'),
+            'status_siswa'                => $this->request->getPost('status_siswa'),
+            'jenjang_pendidikan_didaftar' => $this->request->getPost('jenjang_pendidikan_didaftar'),
+            'nama_sekolah'                => $this->request->getPost('nama_sekolah'),
+            'prestasi'                    => $this->request->getPost('prestasi'),
+        ]);
+
+        // =======================================================
+        // 3. UPDATE TABEL DATA KESEHATAN
+        // =======================================================
+        $db->table('data_kesehatan')->where('id_pendaftar', $id)->update([
+            'gol_darah'        => $this->request->getPost('gol_darah'),
+            'alergi'           => $this->request->getPost('alergi'),
+            'riwayat_penyakit' => $this->request->getPost('riwayat_penyakit'),
+        ]);
+
+        // =======================================================
+        // 4. UPDATE TABEL DATA ORANG TUA (Array)
+        // =======================================================
+        $id_ortu         = $this->request->getPost('id_ortu');
+        $hubungan_ortu   = $this->request->getPost('hubungan_ortu');
+        $nama_ortu       = $this->request->getPost('nama_ortu');
+        $pekerjaan_ortu  = $this->request->getPost('pekerjaan_ortu');
+        $no_hp_ortu      = $this->request->getPost('no_hp_ortu');
+        $pendidikan_ortu = $this->request->getPost('pendidikan_ortu');
+        $pendapatan_ortu = $this->request->getPost('pendapatan_ortu');
+        $status_ortu     = $this->request->getPost('status_ortu');
+
+        // Lakukan perulangan karena data orang tua bisa lebih dari 1 (Ayah, Ibu, dll)
+        if (!empty($id_ortu)) {
+            for ($i = 0; $i < count($id_ortu); $i++) {
+                if (!empty($id_ortu[$i])) {
+                    $db->table('data_orang_tua')->where('id', $id_ortu[$i])->update([
+                        'hubungan'   => $hubungan_ortu[$i],
+                        'nama'       => $nama_ortu[$i],
+                        'pekerjaan'  => $pekerjaan_ortu[$i],
+                        'no_hp'      => $no_hp_ortu[$i],
+                        'pendidikan' => $pendidikan_ortu[$i],
+                        'pendapatan' => $pendapatan_ortu[$i],
+                        'status'     => $status_ortu[$i],
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->to('admin/viewFormulir/' . $id)->with('success', 'Seluruh data formulir berhasil diperbarui.');
     }
 
     public function verifikasiPembayaran()

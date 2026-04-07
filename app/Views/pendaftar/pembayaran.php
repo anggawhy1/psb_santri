@@ -74,24 +74,15 @@
                     <div class="space-y-3">
                         <div class="flex items-center gap-4 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition group">
                             <div class="w-12 h-12 bg-white border rounded flex items-center justify-center p-1">
-                                <span class="font-bold text-blue-700 text-xs">BCA</span>
+                                <span class="font-bold text-blue-700 text-xs">BSI</span>
                             </div>
                             <div>
-                                <p class="text-lg font-bold text-gray-800 font-mono tracking-tight group-hover:text-emerald-600 transition">123-456-7890</p>
-                                <p class="text-xs text-gray-500">Yayasan Ponpes Al-Ikhlas</p>
+                                <p class="text-lg font-bold text-gray-800 font-mono tracking-tight group-hover:text-emerald-600 transition">7135248007</p>
+                                <p class="text-xs text-gray-500">an. Pondok Ibnu Saut Bintoro</p>
                             </div>
-                            <button onclick="copyToClipboard('1234567890')" class="ml-auto text-xs text-gray-400 hover:text-emerald-600 font-medium bg-gray-100 hover:bg-emerald-50 px-2 py-1 rounded transition">Salin</button>
-                        </div>
-
-                        <div class="flex items-center gap-4 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition group">
-                            <div class="w-12 h-12 bg-white border rounded flex items-center justify-center p-1">
-                                <span class="font-bold text-blue-500 text-xs">BRI</span>
-                            </div>
-                            <div>
-                                <p class="text-lg font-bold text-gray-800 font-mono tracking-tight group-hover:text-emerald-600 transition">0000-01-0000-50-0</p>
-                                <p class="text-xs text-gray-500">Yayasan Ponpes Al-Ikhlas</p>
-                            </div>
-                            <button onclick="copyToClipboard('0000010000500')" class="ml-auto text-xs text-gray-400 hover:text-emerald-600 font-medium bg-gray-100 hover:bg-emerald-50 px-2 py-1 rounded transition">Salin</button>
+                            <button onclick="copyToClipboard('1234567890', this)" class="ml-auto text-gray-400 hover:text-emerald-600 bg-gray-100 hover:bg-emerald-50 px-2 py-1.5 rounded transition flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -149,9 +140,25 @@
         }
     }
 
-    function copyToClipboard(text) {
+    function copyToClipboard(text, btnElement) {
+        // Salin teks ke clipboard
         navigator.clipboard.writeText(text);
-        alert('Nomor rekening disalin!');
+        
+        // Simpan HTML asli (icon copy)
+        const originalHTML = btnElement.innerHTML;
+        
+        // Ubah tampilan tombol jadi "Disalin" + Icon Centang
+        btnElement.innerHTML = `
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span class="text-xs font-bold text-emerald-600">Disalin</span>
+        `;
+        btnElement.classList.add('bg-emerald-100');
+        
+        // Kembalikan ke tampilan semula setelah 2 detik
+        setTimeout(() => {
+            btnElement.innerHTML = originalHTML;
+            btnElement.classList.remove('bg-emerald-100');
+        }, 2000);
     }
 </script>
 

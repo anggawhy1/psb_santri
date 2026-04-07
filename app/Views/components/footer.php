@@ -10,7 +10,7 @@
                     </span>
                 </div>
                 <p class="text-sm leading-relaxed text-slate-500">
-                    Membentuk generasi Rabbani yang berakhlak mulia, cerdas, dan mandiri berlandaskan Al-Qur'an dan Sunnah serta siap menghadapi tantangan zaman.
+                    Melahirkan Generasi yang Cerdas Intelektual-Spiritual, Berilmu dan Beradab.
                 </p>
                 <div class="flex gap-4 pt-2">
                     <a href="#" class="text-slate-500 hover:text-white transition"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg></a>
@@ -44,13 +44,13 @@
                         <div class="text-emerald-500 bg-emerald-500/10 p-2 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
                         </div>
-                        <span>(0274) 1234567</span>
+                        <span>+62 856-2475-4265</span>
                     </li>
                     <li class="flex items-center gap-3 group">
                         <div class="text-emerald-500 bg-emerald-500/10 p-2 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                         </div>
-                        <span>admin@banyuagung.ponpes.id</span>
+                        <span>yayasanibnusautbintoro@gmail.com</span>
                     </li>
                 </ul>
             </div>

@@ -34,7 +34,7 @@
                         
                         <div class="absolute left-0 mt-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-2">
                             <div class="py-2">
-                                <a href="<?= base_url('berita') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Berita & Kegiatan</a>
+                                <a href="<?= base_url('berita') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Berita</a>
                                 <a href="<?= base_url('prestasi') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Prestasi Santri</a>
                                 <a href="<?= base_url('galeri') ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">Galeri Kegiatan</a>
                             </div>
@@ -80,7 +80,7 @@
                     <svg id="icon-publikasi" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
                 <div id="submenu-publikasi" class="hidden pl-4 space-y-1 mt-1">
-                    <a href="<?= base_url('berita') ?>" class="block px-4 py-2 rounded-lg text-sm text-gray-500 hover:text-emerald-600 hover:bg-emerald-50">Berita & Kegiatan</a>
+                    <a href="<?= base_url('berita') ?>" class="block px-4 py-2 rounded-lg text-sm text-gray-500 hover:text-emerald-600 hover:bg-emerald-50">Berita</a>
                     <a href="<?= base_url('prestasi') ?>" class="block px-4 py-2 rounded-lg text-sm text-gray-500 hover:text-emerald-600 hover:bg-emerald-50">Prestasi Santri</a>
                     <a href="<?= base_url('galeri') ?>" class="block px-4 py-2 rounded-lg text-sm text-gray-500 hover:text-emerald-600 hover:bg-emerald-50">Galeri Kegiatan</a>
                 </div>
