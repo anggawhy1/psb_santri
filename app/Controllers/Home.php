@@ -18,7 +18,6 @@ class Home extends BaseController
     {
         $db = \Config\Database::connect();
 
-        // PERBAIKAN: Pakai 'id_informasi' sesuai gambar phpMyAdmin kamu
         $info_tahun = $db->table('informasi_psb')
             ->where('id_informasi', 1)
             ->get()
@@ -59,7 +58,7 @@ class Home extends BaseController
 
         $data = [
             'title'     => 'Info Pendaftaran | Ponpes Banyu Agung Ibnu Saut Bintoro',
-            'tahun_psb' => $tahun_psb // Lempar variabel ke view psb
+            'tahun_psb' => $tahun_psb
         ];
 
         return view('psb', $data);
@@ -91,7 +90,7 @@ class Home extends BaseController
 
     public function detailBerita($id)
     {
-        // JOIN tabel promosi dengan users untuk ambil nama admin
+
         $berita = $this->promosiModel
             ->select('promosi.*, users.nama_lengkap as nama_penulis')
             ->join('users', 'users.id_user = promosi.id_user')
@@ -117,11 +116,10 @@ class Home extends BaseController
     {
         $data = [
             'title' => 'Prestasi Santri',
-            // Ganti findAll() dengan paginate()
             'prestasi' => $this->promosiModel->where('type', 'prestasi')
                 ->orderBy('created_at', 'DESC')
                 ->paginate(9, 'prestasi'),
-            'pager' => $this->promosiModel->pager // Tambahkan ini
+            'pager' => $this->promosiModel->pager
         ];
         return view('prestasi', $data);
     }

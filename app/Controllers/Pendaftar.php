@@ -39,29 +39,18 @@ class Pendaftar extends BaseController
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('login');
 
-        // Gunakan Query Builder agar kita bisa menarik data dari semua tabel terkait
         $db = \Config\Database::connect();
-
-        // Asumsi $this->id_pendaftar sudah didefinisikan di BaseController/konstruktor Anda
         $id = $this->id_pendaftar;
 
-        // 1. Ambil data dari tabel formulir
         $pendaftar  = $db->table('pendaftar')->where('id_pendaftar', $id)->get()->getRowArray();
         $pendidikan = $db->table('data_pendidikan')->where('id_pendaftar', $id)->get()->getRowArray();
         $kesehatan  = $db->table('data_kesehatan')->where('id_pendaftar', $id)->get()->getRowArray();
-        // BENAR
         $ortu = $db->table('data_orang_tua')->where('id_pendaftar', $id)->get()->getResultArray();
-
-        // 2. Ambil data status tahapan agar sinkron dengan halaman Status
         $bayar  = $db->table('pembayaran')->where('id_pendaftar', $id)->get()->getRowArray();
         $berkas = $db->table('berkas')->where('id_pendaftar', $id)->get()->getRowArray();
         $jadwal = $db->table('jadwal_wawancara')->where('id_pendaftar', $id)->get()->getRowArray();
-
-        // 3. TAMBAHAN: Ambil data Tahun Ajaran dari tabel informasi_psb
         $info_tahun = $db->table('informasi_psb')->where('id_informasi', 1)->get()->getRowArray();
         $tahun_psb  = $info_tahun ? $info_tahun['isi'] : '2025/2026';
-
-        // 4. Kirim semua data ke View dengan nama variabel yang tepat
         $data = [
             'title'      => 'Dashboard Utama',
             'pendaftar'  => $pendaftar,
@@ -71,7 +60,7 @@ class Pendaftar extends BaseController
             'bayar'      => $bayar,
             'berkas'     => $berkas,
             'jadwal'     => $jadwal,
-            'tahun_psb'  => $tahun_psb // <-- Lempar variabel ini ke View
+            'tahun_psb'  => $tahun_psb
         ];
 
         return view('pendaftar/dashboard', $data);
@@ -110,8 +99,6 @@ class Pendaftar extends BaseController
         if ($file->isValid() && !$file->hasMoved()) {
             $newName = $file->getRandomName();
             $file->move('uploads/pembayaran', $newName);
-
-            // Jika diupload, status kembali jadi 'Menunggu' agar admin cek lagi
             $data = [
                 'id_pendaftar'      => $this->id_pendaftar,
                 'tanggal_bayar'     => date('Y-m-d'),
@@ -120,14 +107,11 @@ class Pendaftar extends BaseController
                 'keterangan'        => 'Menunggu verifikasi admin'
             ];
 
-            // LOGIKA PENTING: Cek sudah ada data belum?
             $cek = $this->pembayaranModel->where('id_pendaftar', $this->id_pendaftar)->first();
 
             if ($cek) {
-                // Kalau sudah ada (misal Ditolak), kita UPDATE barisnya
                 $this->pembayaranModel->update($cek['id_pembayaran'], $data);
             } else {
-                // Kalau belum ada, kita INSERT baru
                 $this->pembayaranModel->insert($data);
             }
 
@@ -144,9 +128,7 @@ class Pendaftar extends BaseController
         $data = [
             'title'      => 'Unggah Berkas',
             'berkas'     => $this->berkasModel->where('id_pendaftar', $this->id_pendaftar)->first(),
-            // TAMBAHAN: Kirim data pembayaran untuk cek status lunas
             'pembayaran' => $this->pembayaranModel->where('id_pendaftar', $this->id_pendaftar)->first(),
-            // TAMBAHAN: Kirim data pendidikan untuk cek Mahasiswa/Pelajar
             'pendidikan' => $this->pendidikanModel->where('id_pendaftar', $this->id_pendaftar)->first(),
         ];
         return view('pendaftar/berkas', $data);
@@ -157,31 +139,20 @@ class Pendaftar extends BaseController
         $jenis = $this->request->getPost('jenis_berkas');
         $file = $this->request->getFile('file_berkas');
 
-        // Validasi tambahan
         $allowed_types = ['akta_kelahiran', 'kartu_keluarga', 'ktp_ortu', 'ktp_pendaftar', 'ijazah_raport', 'pas_foto'];
 
         if (in_array($jenis, $allowed_types) && $file->isValid() && !$file->hasMoved()) {
 
-            // 1. Proses Upload
             $newName = $this->id_pendaftar . '_' . $jenis . '_' . $file->getRandomName();
             $file->move('uploads/berkas', $newName);
 
-            // 2. Cek Data Lama
             $cek = $this->berkasModel->where('id_pendaftar', $this->id_pendaftar)->first();
 
-            // 3. Siapkan Data Update
             $data = [];
-            $data[$jenis] = $newName; // Nama file baru masuk ke kolom yang sesuai
+            $data[$jenis] = $newName;
             $data['id_pendaftar'] = $this->id_pendaftar;
-
-            // --- PERBAIKAN DI SINI ---
-            // Paksa status jadi 'Menunggu' setiap kali ada file baru yang masuk
-            // Supaya Admin tahu ada update, dan Alert Merah di santri hilang (jadi Kuning)
             $data['status_berkas'] = 'Menunggu';
-
-            // (Opsional tapi Bagus) Hapus catatan penolakan lama biar bersih
             $data['keterangan'] = null;
-            // -------------------------
 
             if ($cek) {
                 $this->berkasModel->update($cek['id_berkas'], $data);

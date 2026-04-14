@@ -34,32 +34,50 @@ class Auth extends BaseController
         $ortuModel = new DataOrangTuaModel();
         $kesehatanModel = new DataKesehatanModel();
 
-        // 1. VALIDASI
+        // 1. Validasi Dasar (Data Diri Utama)
         $rules = [
-            'nama_lengkap' => 'required',
-            'email'        => 'required|valid_email|is_unique[pendaftar.email]',
-            'nik'          => 'required|numeric|min_length[16]',
-            'no_kk'        => 'required|numeric|min_length[16]',
-            'tempat_lahir' => 'required',
-            'tanggal_lahir' => 'required',
-            'jenis_kelamin' => 'required',
-            'no_hp'        => 'required',
-            'alamat_lengkap' => 'required',
-            'program_pilihan' => 'required',
+            'nama_lengkap'      => 'required',
+            'email'             => 'required|valid_email|is_unique[pendaftar.email]',
+            'nik'               => 'required|numeric|min_length[16]',
+            'no_kk'             => 'required|numeric|min_length[16]',
+            'tempat_lahir'      => 'required',
+            'tanggal_lahir'     => 'required',
+            'jenis_kelamin'     => 'required',
+            'no_hp'             => 'required',
+            'alamat_lengkap'    => 'required',
+            'program_pilihan'   => 'required',
+            'status_pendidikan' => 'required',
         ];
 
+        // 2. Validasi Dinamis Pendidikan
+        $statusPendidikan = $this->request->getPost('status_pendidikan');
+        $statusSiswa      = $this->request->getPost('status_siswa');
+
+        if ($statusPendidikan == 'Pelajar') {
+            $rules['nisn']         = 'required';
+            $rules['status_siswa'] = 'required';
+            $rules['nama_sekolah'] = 'required'; // Berlaku untuk dropdown maupun input text
+
+            // Jika "Siswa Baru", wajiban kolom sekolah sebelumnya
+            if ($statusSiswa == 'Siswa Baru') {
+                $rules['asal_sekolah']                = 'required';
+                $rules['kelas_terakhir']              = 'required';
+                $rules['jenjang_pendidikan_didaftar'] = 'required';
+            }
+        } elseif ($statusPendidikan == 'Mahasiswa') {
+            $rules['nama_pt'] = 'required';
+        }
+
+        // Jalankan Validasi
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $db->transStart();
-
-        // 2. GENERATE NO REGISTRASI
         $tahun = date('Y');
         $random = strtoupper(substr(uniqid(), -4));
         $no_registrasi = "PSB-{$tahun}-{$random}";
 
-        // 3. SIMPAN PENDAFTAR
         $dataPendaftar = [
             'email'           => $this->request->getPost('email'),
             'password'        => password_hash($no_registrasi, PASSWORD_DEFAULT),
@@ -80,22 +98,44 @@ class Auth extends BaseController
         $pendaftarModel->insert($dataPendaftar);
         $idPendaftar = $pendaftarModel->getInsertID();
 
-        // 4. SIMPAN PENDIDIKAN
+        // Siapkan Data Pendidikan sesuai dengan statusnya
         $dataPendidikan = [
-            'id_pendaftar'                => $idPendaftar,
-            'status'                      => $this->request->getPost('status_pendidikan'),
-            'nama_pt'                     => $this->request->getPost('nama_pt') ?: null,
-            'nisn'                        => $this->request->getPost('nisn') ?: null,
-            'asal_sekolah'                => $this->request->getPost('asal_sekolah') ?: null,
-            'kelas_terakhir'              => $this->request->getPost('kelas_terakhir') ?: null,
-            'status_siswa'                => $this->request->getPost('status_siswa') ?: null,
-            'jenjang_pendidikan_didaftar' => $this->request->getPost('jenjang_pendidikan_didaftar') ?: null,
-            'nama_sekolah'                => $this->request->getPost('nama_sekolah') ?: null,
-            'prestasi'                    => $this->request->getPost('prestasi') ?: null,
+            'id_pendaftar' => $idPendaftar,
+            'status'       => $statusPendidikan,
+            'prestasi'     => $this->request->getPost('prestasi') ?: null,
         ];
+
+        // Filter data yang dimasukkan ke database berdasarkan pilihan
+        if ($statusPendidikan == 'Pelajar') {
+            $dataPendidikan['nisn']         = $this->request->getPost('nisn');
+            $dataPendidikan['status_siswa'] = $statusSiswa;
+            $dataPendidikan['nama_sekolah'] = $this->request->getPost('nama_sekolah');
+
+            if ($statusSiswa == 'Siswa Baru') {
+                $dataPendidikan['asal_sekolah']                = $this->request->getPost('asal_sekolah');
+                $dataPendidikan['kelas_terakhir']              = $this->request->getPost('kelas_terakhir');
+                $dataPendidikan['jenjang_pendidikan_didaftar'] = $this->request->getPost('jenjang_pendidikan_didaftar');
+            } else {
+                // Set NULL jika 'Sudah Bersekolah' agar aman di database
+                $dataPendidikan['asal_sekolah']                = null;
+                $dataPendidikan['kelas_terakhir']              = null;
+                $dataPendidikan['jenjang_pendidikan_didaftar'] = null;
+            }
+            $dataPendidikan['nama_pt'] = null; // Pastikan null jika bukan mahasiswa
+
+        } elseif ($statusPendidikan == 'Mahasiswa') {
+            $dataPendidikan['nama_pt'] = $this->request->getPost('nama_pt');
+            // Set NULL untuk semua data pelajar
+            $dataPendidikan['nisn']                        = null;
+            $dataPendidikan['status_siswa']                = null;
+            $dataPendidikan['nama_sekolah']                = null;
+            $dataPendidikan['asal_sekolah']                = null;
+            $dataPendidikan['kelas_terakhir']              = null;
+            $dataPendidikan['jenjang_pendidikan_didaftar'] = null;
+        }
+
         $pendidikanModel->insert($dataPendidikan);
 
-        // 5. SIMPAN ORANG TUA
         $hubungan   = $this->request->getPost('hubungan_ortu');
         $nama       = $this->request->getPost('nama_ortu');
         $pekerjaan  = $this->request->getPost('pekerjaan_ortu');
@@ -121,7 +161,6 @@ class Auth extends BaseController
             }
         }
 
-        // 6. SIMPAN KESEHATAN
         $dataKesehatan = [
             'id_pendaftar'     => $idPendaftar,
             'gol_darah'        => $this->request->getPost('gol_darah'),
@@ -136,16 +175,11 @@ class Auth extends BaseController
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data. Silakan coba lagi.');
         }
 
-        // =========================================================================
-        // 7. KIRIM EMAIL BUKTI REGISTRASI 
-        // =========================================================================
         $email_pendaftar = $this->request->getPost('email');
         $nama_lengkap    = $this->request->getPost('nama_lengkap');
 
-        // Memanggil fungsi private kirim email
         $this->_kirimEmailBukti($email_pendaftar, $nama_lengkap, $no_registrasi);
 
-        // Jika berhasil lewat fungsi kirim email, baru redirect ke login
         return redirect()->to('login')->with('success', '<b>Pendaftaran Berhasil!</b><br>Silakan Login menggunakan:<br>Email: ' . $this->request->getPost('email') . '<br>No. Registrasi: <b>' . $no_registrasi . '</b> (Bukti pendaftaran telah dikirim ke email Anda)');
     }
 
@@ -233,9 +267,6 @@ class Auth extends BaseController
         }
     }
 
-    // =========================================================================
-    // FUNGSI PRIVATE UNTUK MENGIRIM EMAIL BUKTI PENDAFTARAN
-    // =========================================================================
     private function _kirimEmailBukti($email_tujuan, $nama, $no_reg)
     {
         $emailService = \Config\Services::email();
@@ -243,7 +274,6 @@ class Auth extends BaseController
         $emailService->setTo($email_tujuan);
         $emailService->setSubject('Pendaftaran Berhasil - No. Registrasi: ' . $no_reg);
 
-        // Desain HTML untuk isi Email
         $pesan = "
         <div style='font-family: Helvetica, Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;'>
             <div style='background-color: #059669; padding: 20px; text-align: center;'>
@@ -273,13 +303,11 @@ class Auth extends BaseController
 
         $emailService->setMessage($pesan);
 
-        // EKSEKUSI KIRIM DAN CEK ERROR (Debugger)
         if ($emailService->send()) {
             return true;
         } else {
-            // JIKA GAGAL, HALAMAN AKAN MENAMPILKAN PESAN ERROR PANJANG
             echo $emailService->printDebugger(['headers']);
-            exit; // Stop aplikasi agar errornya bisa kamu foto/baca
+            exit;
         }
     }
 }

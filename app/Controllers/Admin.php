@@ -27,7 +27,6 @@ class Admin extends BaseController
 
     public function __construct()
     {
-        // Load semua model
         $this->promosiModel = new PromosiModel();
         $this->infoPsbModel = new InformasiPsbModel();
         $this->pendaftarModel = new PendaftarModel();
@@ -105,7 +104,6 @@ class Admin extends BaseController
             'total_pendaftar'   => $total_pendaftar,
             'total_lulus'       => $total_lulus,
             'total_ditolak'     => $total_ditolak,
-            // Lempar data grafik berbentuk JSON agar bisa dibaca Javascript
             'label_grafik'      => json_encode($label_grafik),
             'data_grafik'       => json_encode($data_grafik)
         ];
@@ -113,15 +111,11 @@ class Admin extends BaseController
         return view('admin/dashboard', $data);
     }
 
-    // --- MANAJEMEN KONTEN ---
-
-    // Helper private untuk mengambil data dengan sorting dan pagination
     private function _getPromosiData($type)
     {
-        $sort = $this->request->getGet('sort'); // ambil dari URL ?sort=asc
-        $order = ($sort == 'oldest') ? 'ASC' : 'DESC'; // Default DESC (Terbaru)
+        $sort = $this->request->getGet('sort');
+        $order = ($sort == 'oldest') ? 'ASC' : 'DESC';
 
-        // Gunakan group name 'promosi' agar pagination tidak bentrok
         $data = $this->promosiModel->where('type', $type)
             ->orderBy('id_promosi', $order)
             ->paginate(15, 'promosi');
@@ -131,14 +125,14 @@ class Admin extends BaseController
             'type'  => $type,
             'sort'  => ($sort == 'oldest') ? 'oldest' : 'newest',
             'data'  => $data,
-            'pager' => $this->promosiModel->pager // KIRIM OBJECT PAGER KE VIEW
+            'pager' => $this->promosiModel->pager
         ];
     }
 
     public function berita()
     {
         $data = $this->_getPromosiData('berita');
-        return view('admin/konten/promosi_index', $data); // View Index (Tabel)
+        return view('admin/konten/promosi_index', $data);
     }
 
     public function prestasi()
@@ -153,15 +147,9 @@ class Admin extends BaseController
         return view('admin/konten/promosi_index', $data);
     }
 
-    // --- HALAMAN FORM TAMBAH (TERPISAH) ---
-    // =========================================================================
-    // 1. MANAJEMEN KONTEN (BERITA, PRESTASI, GALERI)
-    // =========================================================================
-
-    // --- HALAMAN FORM TAMBAH ---
     public function tambahPromosi($type)
     {
-        // Validasi tipe agar user tidak asal ketik di URL
+
         if (!in_array($type, ['berita', 'prestasi', 'galeri'])) {
             return redirect()->to('admin/dashboard');
         }
@@ -175,12 +163,10 @@ class Admin extends BaseController
         return view('admin/konten/promosi_form', $data);
     }
 
-    // --- PROSES SIMPAN BARU ---
     public function savePromosi()
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('admin/login');
 
-        // Pastikan type diambil sebagai string
         $type = (string)$this->request->getPost('type');
         $file = $this->request->getFile('gambar');
         $namaGambar = null;
@@ -201,21 +187,16 @@ class Admin extends BaseController
         return redirect()->to('admin/' . $type)->with('success', 'Data berhasil ditambahkan.');
     }
 
-    // --- HALAMAN FORM EDIT ---
     public function editPromosi($id)
     {
         if (empty($id)) return redirect()->back();
 
-        // Cari data
         $row = $this->promosiModel->find($id);
 
-        // Jika data tidak ditemukan
         if (!$row) {
             return redirect()->back()->with('error', 'Data tidak ditemukan.');
         }
 
-        // Ambil type dari database untuk judul halaman
-        // Kita paksa jadi string agar error IDE hilang
         $type = (string)($row['type'] ?? 'berita');
 
         $data = [
@@ -227,39 +208,32 @@ class Admin extends BaseController
         return view('admin/konten/promosi_form', $data);
     }
 
-    // --- PROSES UPDATE ---
     public function updatePromosi()
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('admin/login');
 
         $id = $this->request->getPost('id_promosi');
 
-        // Cari data lama dulu untuk memastikan data ada & ambil tipe aslinya
         $dataLama = $this->promosiModel->find($id);
 
         if (!$dataLama) {
             return redirect()->to('admin/dashboard')->with('error', 'Data asli tidak ditemukan.');
         }
 
-        // Ambil type dari data lama (Lebih aman daripada dari POST form)
         $type = (string)$dataLama['type'];
-        $namaGambar = $dataLama['path_gambar']; // Default pakai gambar lama
+        $namaGambar = $dataLama['path_gambar'];
 
-        // Cek apakah ada gambar baru yang diupload
         $file = $this->request->getFile('gambar');
         if ($file && $file->isValid() && !$file->hasMoved()) {
 
-            // Hapus gambar lama fisik jika ada
             if (!empty($dataLama['path_gambar']) && file_exists('uploads/konten/' . $dataLama['path_gambar'])) {
                 unlink('uploads/konten/' . $dataLama['path_gambar']);
             }
 
-            // Upload gambar baru
             $namaGambar = $file->getRandomName();
             $file->move('uploads/konten', $namaGambar);
         }
 
-        // Update Database
         $this->promosiModel->update($id, [
             'judul'       => $this->request->getPost('judul'),
             'deskripsi'   => $this->request->getPost('deskripsi'),
@@ -269,7 +243,6 @@ class Admin extends BaseController
         return redirect()->to('admin/' . $type)->with('success', 'Data berhasil diperbarui.');
     }
 
-    // --- PROSES HAPUS ---
     public function deletePromosi($id)
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('admin/login');
@@ -279,15 +252,13 @@ class Admin extends BaseController
         $data = $this->promosiModel->find($id);
 
         if ($data) {
-            // Ambil tipe sebelum dihapus untuk redirect
+
             $redirectType = (string)($data['type'] ?? 'dashboard');
 
-            // Hapus file gambar
             if (!empty($data['path_gambar']) && file_exists('uploads/konten/' . $data['path_gambar'])) {
                 unlink('uploads/konten/' . $data['path_gambar']);
             }
 
-            // Hapus data database
             $this->promosiModel->delete($id);
 
             return redirect()->to('admin/' . $redirectType)->with('success', 'Data berhasil dihapus.');
@@ -296,11 +267,6 @@ class Admin extends BaseController
         return redirect()->back()->with('error', 'Data tidak ditemukan.');
     }
 
-    // =========================================================================
-    // 2. MANAJEMEN INFORMASI PENDAFTARAN (READ & UPDATE ONLY)
-    // =========================================================================
-
-    // HALAMAN INDEX (LIST DATA)
     public function informasi()
     {
         $data = [
@@ -310,7 +276,6 @@ class Admin extends BaseController
         return view('admin/konten/informasi_index', $data);
     }
 
-    // HALAMAN FORM EDIT
     public function editInformasi($id)
     {
         if (empty($id)) return redirect()->back();
@@ -328,20 +293,17 @@ class Admin extends BaseController
         return view('admin/konten/informasi_form', $data);
     }
 
-    // PROSES UPDATE
     public function updateInformasi()
     {
         if (!session()->get('isLoggedIn')) return redirect()->to('admin/login');
 
         $id = $this->request->getPost('id_informasi');
 
-        // Validasi ID
         if (empty($id)) {
             return redirect()->to('admin/informasi')->with('error', 'ID tidak valid.');
         }
 
         $this->infoPsbModel->update($id, [
-            // Judul saya biarkan bisa diedit jika ada typo, tapi bisa di-disable di view jika mau strict
             'judul' => $this->request->getPost('judul'),
             'isi'   => $this->request->getPost('isi')
         ]);
@@ -349,11 +311,9 @@ class Admin extends BaseController
         return redirect()->to('admin/informasi')->with('success', 'Informasi berhasil diperbarui.');
     }
 
-    // --- MANAJEMEN PENDAFTAR (Full Logic) ---
-
     public function pendaftar()
     {
-        // 1. Ambil Semua Input Filter
+
         $keyword  = $this->request->getGet('keyword'); // Pencarian Nama/No.Reg
         $fBayar   = $this->request->getGet('status_pembayaran');
         $fBerkas  = $this->request->getGet('status_berkas');
@@ -363,17 +323,12 @@ class Admin extends BaseController
         $db = \Config\Database::connect();
         $builder = $this->pendaftarModel->builder();
 
-        // Select Data Lengkap
         $builder->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas, jadwal_wawancara.status_wawancara, jadwal_wawancara.tanggal_wawancara');
         $builder->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $builder->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $builder->join('jadwal_wawancara', 'jadwal_wawancara.id_pendaftar = pendaftar.id_pendaftar', 'left');
-
-        // Hanya tampilkan yang AKTIF (Menunggu) di tabel utama. 
-        // Yang sudah selesai masuk Riwayat.
         $builder->where('pendaftar.status_akhir', 'Menunggu');
 
-        // 2. Terapkan Filter
         if ($keyword) {
             $builder->groupStart()
                 ->like('pendaftar.nama_lengkap', $keyword)
@@ -397,7 +352,6 @@ class Admin extends BaseController
             'title'    => 'Data Pendaftar Masuk',
             'data'     => $this->pendaftarModel->paginate(10, 'pendaftar'),
             'pager'    => $this->pendaftarModel->pager,
-            // Kirim balik status filter ke view
             'keyword'  => $keyword,
             'f_bayar'  => $fBayar,
             'f_berkas' => $fBerkas,
@@ -407,36 +361,24 @@ class Admin extends BaseController
         return view('admin/pendaftar/index', $data);
     }
 
-    // =========================================================================
-    // RIWAYAT (ARSIP LULUS / TIDAK LULUS)
-    // =========================================================================
-
     public function riwayat()
     {
-        // 1. Ambil keyword, sort, DAN status dari URL
         $keyword = $this->request->getGet('keyword');
         $sort    = $this->request->getGet('sort');
-        $status  = $this->request->getGet('status'); // <--- TAMBAHAN UNTUK FILTER KELULUSAN
-
-        // Gunakan Model langsung (agar pagination mendeteksi filter)
-        // Jangan pakai ->builder() terpisah agar paginate jalan normal
+        $status  = $this->request->getGet('status');
         $model = $this->pendaftarModel;
-
         $model->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas');
         $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
 
-        // 2. Filter Status Kelulusan (Dinamis)
         if ($status === 'Lulus') {
             $model->where('pendaftar.status_akhir', 'Lulus');
         } elseif ($status === 'Tidak Lulus') {
             $model->where('pendaftar.status_akhir', 'Tidak Lulus');
         } else {
-            // Default: Tampilkan semua yang prosesnya sudah selesai (Lulus & Tidak Lulus)
             $model->whereIn('pendaftar.status_akhir', ['Lulus', 'Tidak Lulus']);
         }
 
-        // 3. Fitur Search (Nama & No Reg)
         if ($keyword) {
             $model->groupStart()
                 ->like('pendaftar.nama_lengkap', $keyword)
@@ -444,12 +386,9 @@ class Admin extends BaseController
                 ->groupEnd();
         }
 
-        // 2. Logika Sorting (Terbaru vs Terlama)
         if ($sort == 'oldest') {
-            // Jika user minta 'oldest', urutkan dari ID kecil (lama) ke besar
             $model->orderBy('pendaftar.id_pendaftar', 'ASC');
         } else {
-            // Default (newest): urutkan dari ID besar (baru) ke kecil
             $model->orderBy('pendaftar.id_pendaftar', 'DESC');
         }
 
@@ -459,34 +398,29 @@ class Admin extends BaseController
             'pager'   => $model->pager,
             'keyword' => $keyword,
             'sort'    => $sort ? $sort : 'newest',
-            'status'  => $status // <--- INI DIA PENYELAMATNYA! Tambahkan baris ini
+            'status'  => $status
         ];
 
         return view('admin/pendaftar/riwayat', $data);
     }
 
-    // FUNGSI BARU: MELIHAT DETAIL LENGKAP (FULL DATA)
     public function detailRiwayat($id)
     {
-        // Pakai helper _getAllData yang sudah kita buat sebelumnya
         $data = $this->_getAllData($id);
         $data['title'] = 'Detail Lengkap Pendaftar';
 
         return view('admin/pendaftar/detail_lengkap', $data);
     }
 
-    // Tambahkan atau update fungsi ini di bagian bawah Controller Admin.php
     private function _getAllData($id)
     {
         $db = \Config\Database::connect();
 
-        // 1. Ambil data utama pendaftar
         $pendaftar = $this->pendaftarModel->find($id);
         if (!$pendaftar) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Pendaftar tidak ditemukan");
         }
 
-        // 2. Ambil data pendukung dari tabel lain
         return [
             'pendaftar'  => $pendaftar,
             'pendidikan' => $db->table('data_pendidikan')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
@@ -498,7 +432,6 @@ class Admin extends BaseController
         ];
     }
 
-    // 1. VIEW EDIT FORMULIR
     public function viewFormulir($id)
     {
         $data = $this->_getAllData($id);
@@ -507,7 +440,6 @@ class Admin extends BaseController
         return view('admin/pendaftar/detail', $data);
     }
 
-    // 2. VIEW VERIFIKASI PEMBAYARAN
     public function viewPembayaran($id)
     {
         try {
@@ -520,7 +452,6 @@ class Admin extends BaseController
         }
     }
 
-    // 3. VIEW VERIFIKASI BERKAS
     public function viewBerkas($id)
     {
         try {
@@ -533,7 +464,6 @@ class Admin extends BaseController
         }
     }
 
-    // 4. VIEW ATUR JADWAL
     public function viewWawancara($id)
     {
         try {
@@ -546,7 +476,6 @@ class Admin extends BaseController
         }
     }
 
-    // 5. VIEW KEPUTUSAN AKHIR
     public function viewKelulusan($id)
     {
         try {
@@ -564,9 +493,6 @@ class Admin extends BaseController
         $id = $this->request->getPost('id_pendaftar');
         $db = \Config\Database::connect();
 
-        // =======================================================
-        // 1. UPDATE TABEL PENDAFTAR (Data Diri)
-        // =======================================================
         $this->pendaftarModel->update($id, [
             'nama_lengkap'    => $this->request->getPost('nama_lengkap'),
             'no_hp'           => $this->request->getPost('no_hp'),
@@ -581,10 +507,6 @@ class Admin extends BaseController
             'alamat_lengkap'  => $this->request->getPost('alamat_lengkap'),
         ]);
 
-        // =======================================================
-        // 2. UPDATE TABEL DATA PENDIDIKAN
-        // =======================================================
-        // Catatan: name di form adalah 'status_pendidikan', disimpan ke kolom 'status'
         $db->table('data_pendidikan')->where('id_pendaftar', $id)->update([
             'status'                      => $this->request->getPost('status_pendidikan'),
             'nama_pt'                     => $this->request->getPost('nama_pt'),
@@ -597,18 +519,12 @@ class Admin extends BaseController
             'prestasi'                    => $this->request->getPost('prestasi'),
         ]);
 
-        // =======================================================
-        // 3. UPDATE TABEL DATA KESEHATAN
-        // =======================================================
         $db->table('data_kesehatan')->where('id_pendaftar', $id)->update([
             'gol_darah'        => $this->request->getPost('gol_darah'),
             'alergi'           => $this->request->getPost('alergi'),
             'riwayat_penyakit' => $this->request->getPost('riwayat_penyakit'),
         ]);
 
-        // =======================================================
-        // 4. UPDATE TABEL DATA ORANG TUA (Array)
-        // =======================================================
         $id_ortu         = $this->request->getPost('id_ortu');
         $hubungan_ortu   = $this->request->getPost('hubungan_ortu');
         $nama_ortu       = $this->request->getPost('nama_ortu');
@@ -618,7 +534,6 @@ class Admin extends BaseController
         $pendapatan_ortu = $this->request->getPost('pendapatan_ortu');
         $status_ortu     = $this->request->getPost('status_ortu');
 
-        // Lakukan perulangan karena data orang tua bisa lebih dari 1 (Ayah, Ibu, dll)
         if (!empty($id_ortu)) {
             for ($i = 0; $i < count($id_ortu); $i++) {
                 if (!empty($id_ortu[$i])) {
@@ -645,21 +560,18 @@ class Admin extends BaseController
         return redirect()->to('admin/viewPembayaran/' . $id)->with('success', 'Pembayaran diperbarui.');
     }
 
-    // --- PERBAIKAN DI SINI ---
     public function verifikasiBerkas()
     {
         $id = $this->request->getPost('id_pendaftar');
-        // TAMBAHKAN 'keterangan' KE DALAM ARRAY UPDATE
         $this->berkasModel->where('id_pendaftar', $id)
             ->set([
                 'status_berkas' => $this->request->getPost('status'),
-                'keterangan'    => $this->request->getPost('keterangan') // Tambahan ini
+                'keterangan'    => $this->request->getPost('keterangan')
             ])
             ->update();
 
         return redirect()->to('admin/viewBerkas/' . $id)->with('success', 'Berkas diperbarui.');
     }
-    // -------------------------
 
     public function setJadwal()
     {
@@ -677,23 +589,18 @@ class Admin extends BaseController
         return redirect()->to('admin/pendaftar')->with('success', 'Status Akhir Diperbarui.');
     }
 
-
     public function profile()
     {
         $db = \Config\Database::connect();
         $idUser = session()->get('id_user');
 
-        // 1. Cek apakah ada ID di session
         if (!$idUser) {
             return redirect()->to('/login')->with('error', 'Sesi habis, silakan login kembali.');
         }
 
-        // Ambil data user admin dari tabel users
         $user = $db->table('users')->where('id_user', $idUser)->get()->getRowArray();
 
-        // 2. Cek apakah data user ditemukan di database
         if (!$user) {
-            // Hapus session error dan lempar ke login
             session()->destroy();
             return redirect()->to('/login')->with('error', 'Data user tidak ditemukan.');
         }
@@ -716,16 +623,12 @@ class Admin extends BaseController
         $passNew    = $this->request->getPost('password');
         $passConfirm = $this->request->getPost('password_confirm');
 
-        // 1. Update Username
         $dataUpdate = ['username' => $username];
 
-        // 2. Cek jika user ingin ganti password
         if (!empty($passNew)) {
 
-            // Ambil data user saat ini untuk cek password lama
             $currentUser = $db->table('users')->where('id_user', $idUser)->get()->getRowArray();
 
-            // Validasi Password Lama
             if (empty($passOld)) {
                 return redirect()->back()->with('error', 'Masukkan password lama untuk mengganti password.');
             }
@@ -734,19 +637,15 @@ class Admin extends BaseController
                 return redirect()->back()->with('error', 'Password lama salah!');
             }
 
-            // Validasi Konfirmasi Password
             if ($passNew !== $passConfirm) {
                 return redirect()->back()->with('error', 'Konfirmasi password baru tidak cocok.');
             }
 
-            // Hash Password Baru
             $dataUpdate['password'] = password_hash($passNew, PASSWORD_DEFAULT);
         }
 
-        // Update ke database
         $db->table('users')->where('id_user', $idUser)->update($dataUpdate);
 
-        // Update Session Username (biar di navbar langsung berubah)
         session()->set('username', $username);
 
         return redirect()->to('admin/profile')->with('success', 'Profil berhasil diperbarui.');
