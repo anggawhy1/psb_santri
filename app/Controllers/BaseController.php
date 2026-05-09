@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
  *
  * Extend this class in any new controllers:
  * ```
- *     class Home extends BaseController
+ * class Home extends BaseController
  * ```
  *
  * For security, be sure to declare any new methods as protected or private.
@@ -41,5 +41,9 @@ abstract class BaseController extends Controller
 
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
+
+        $this->response->setHeader('Cache-Control', 'no-store, max-age=0, no-cache, must-revalidate');
+        $this->response->setHeader('Pragma', 'no-cache');
+        $this->response->setHeader('Expires', '0');
     }
 }

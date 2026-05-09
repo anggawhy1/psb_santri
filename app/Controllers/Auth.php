@@ -7,9 +7,30 @@ use App\Models\PendaftarModel;
 use App\Models\DataPendidikanModel;
 use App\Models\DataOrangTuaModel;
 use App\Models\DataKesehatanModel;
+use App\Models\InformasiPsbModel; // Tambahan
+use App\Models\UsersModel; // Tambahan
 
 class Auth extends BaseController
 {
+    // Deklarasi properti dengan tipe data biar Intelephense rapi
+    protected PendaftarModel $pendaftarModel;
+    protected DataPendidikanModel $pendidikanModel;
+    protected DataOrangTuaModel $ortuModel;
+    protected DataKesehatanModel $kesehatanModel;
+    protected InformasiPsbModel $infoPsbModel;
+    protected UsersModel $userModel;
+
+    public function __construct()
+    {
+        // Inisialisasi semua Model di satu tempat
+        $this->pendaftarModel  = new PendaftarModel();
+        $this->pendidikanModel = new DataPendidikanModel();
+        $this->ortuModel       = new DataOrangTuaModel();
+        $this->kesehatanModel  = new DataKesehatanModel();
+        $this->infoPsbModel    = new InformasiPsbModel();
+        $this->userModel       = new UsersModel();
+    }
+
     public function index()
     {
         if (session()->get('isLoggedIn')) {
@@ -23,17 +44,27 @@ class Auth extends BaseController
         if (session()->get('isLoggedIn')) {
             return redirect()->to('/pendaftar/dashboard');
         }
-        return view('auth/register');
+
+        // Tarik data dari tabel informasi_psb (menggunakan Model)
+        $infoSekolah = $this->infoPsbModel->where('judul', 'Sekolah Tujuan')->first();
+
+        $daftar_sekolah = [];
+
+        // Pecah teks koma-komaan tadi jadi Array
+        if ($infoSekolah && !empty($infoSekolah['isi'])) {
+            $arraySekolah = explode(',', $infoSekolah['isi']);
+            $daftar_sekolah = array_map('trim', $arraySekolah);
+        }
+
+        $data = [
+            'daftar_sekolah' => $daftar_sekolah
+        ];
+
+        return view('auth/register', $data);
     }
 
     public function attemptRegister()
     {
-        $db = \Config\Database::connect();
-        $pendaftarModel = new PendaftarModel();
-        $pendidikanModel = new DataPendidikanModel();
-        $ortuModel = new DataOrangTuaModel();
-        $kesehatanModel = new DataKesehatanModel();
-
         // 1. Validasi Dasar (Data Diri Utama)
         $rules = [
             'nama_lengkap'      => 'required',
@@ -73,7 +104,9 @@ class Auth extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $db->transStart();
+        // Menggunakan koneksi DB bawaan Model untuk Transaksi
+        $this->pendaftarModel->db->transStart();
+        
         $tahun = date('Y');
         $random = strtoupper(substr(uniqid(), -4));
         $no_registrasi = "PSB-{$tahun}-{$random}";
@@ -95,8 +128,8 @@ class Auth extends BaseController
             'program_pilihan' => $this->request->getPost('program_pilihan'),
             'status_akhir'    => 'Menunggu'
         ];
-        $pendaftarModel->insert($dataPendaftar);
-        $idPendaftar = $pendaftarModel->getInsertID();
+        $this->pendaftarModel->insert($dataPendaftar);
+        $idPendaftar = $this->pendaftarModel->getInsertID();
 
         // Siapkan Data Pendidikan sesuai dengan statusnya
         $dataPendidikan = [
@@ -134,7 +167,7 @@ class Auth extends BaseController
             $dataPendidikan['jenjang_pendidikan_didaftar'] = null;
         }
 
-        $pendidikanModel->insert($dataPendidikan);
+        $this->pendidikanModel->insert($dataPendidikan);
 
         $hubungan   = $this->request->getPost('hubungan_ortu');
         $nama       = $this->request->getPost('nama_ortu');
@@ -147,7 +180,7 @@ class Auth extends BaseController
         if ($hubungan) {
             foreach ($hubungan as $key => $val) {
                 if (!empty($nama[$key])) {
-                    $ortuModel->insert([
+                    $this->ortuModel->insert([
                         'id_pendaftar' => $idPendaftar,
                         'hubungan'     => $val,
                         'nama'         => $nama[$key],
@@ -167,11 +200,11 @@ class Auth extends BaseController
             'riwayat_penyakit' => $this->request->getPost('riwayat_penyakit') ?: null,
             'alergi'           => $this->request->getPost('alergi') ?: null,
         ];
-        $kesehatanModel->insert($dataKesehatan);
+        $this->kesehatanModel->insert($dataKesehatan);
 
-        $db->transComplete();
+        $this->pendaftarModel->db->transComplete();
 
-        if ($db->transStatus() === FALSE) {
+        if ($this->pendaftarModel->db->transStatus() === FALSE) {
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data. Silakan coba lagi.');
         }
 
@@ -186,12 +219,11 @@ class Auth extends BaseController
     public function attemptLogin()
     {
         $session = session();
-        $model = new PendaftarModel();
 
         $email = $this->request->getPost('email');
         $no_registrasi = $this->request->getPost('no_registrasi');
 
-        $data = $model->where('email', $email)
+        $data = $this->pendaftarModel->where('email', $email)
             ->where('no_registrasi', $no_registrasi)
             ->first();
 
@@ -223,13 +255,12 @@ class Auth extends BaseController
     public function attemptAdminLogin()
     {
         $session = session();
-        $db = \Config\Database::connect();
-        $builder = $db->table('users');
 
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
-        $user = $builder->getWhere(['username' => $username])->getRowArray();
+        // Menggunakan UserModel alih-alih $db->table('users')
+        $user = $this->userModel->where('username', $username)->first();
 
         if ($user) {
             if (password_verify($password, $user['password'])) {

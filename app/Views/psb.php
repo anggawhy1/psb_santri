@@ -197,30 +197,19 @@
                         </div>
 
                         <ul class="space-y-4">
-                            <li class="flex items-center gap-3">
-                                <div class="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                                    <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm font-medium text-slate-600">MTs Negeri 7 Bantul</span>
-                            </li>
-                            <li class="flex items-center gap-3">
-                                <div class="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                                    <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm font-medium text-slate-600">SMPN 1 & 2 Piyungan</span>
-                            </li>
-                            <li class="flex items-center gap-3">
-                                <div class="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                                    <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-sm font-medium text-slate-600">SMA Negeri 1 Piyungan</span>
-                            </li>
+                            <?php if (!empty($daftar_sekolah)) : ?>
+                                <?php foreach ($daftar_sekolah as $sekolah) : ?>
+                                    <li class="flex items-center gap-3">
+                                        <div class="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+                                            <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="text-sm font-medium text-slate-600"><?= esc($sekolah) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+
                             <li class="flex items-center gap-3">
                                 <div class="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
                                     <svg class="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
@@ -268,7 +257,7 @@
                 </div>
 
                 <div class="mt-8 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center shadow-sm">
-                    <span class="text-base text-emerald-800 font-bold tracking-wide">Biaya Pendaftaran: Rp 200.000</span>
+                    <span class="text-base text-emerald-800 font-bold tracking-wide">Biaya Pendaftaran: <?= $biaya_pendaftaran ?></span>
                 </div>
 
                 <div class="mt-4 flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl">
@@ -278,7 +267,7 @@
                         </svg>
                     </div>
                     <p class="text-xs text-amber-800 font-medium leading-relaxed">
-                        <span class="font-bold uppercase tracking-wider">Perhatian:</span> Untuk saat ini, kami baru membuka penerimaan pendaftaran khusus untuk <strong class="text-amber-900 border-b border-amber-400">Santri Putra</strong>.
+                        <span class="font-bold uppercase tracking-wider">Perhatian:</span> <?= $pengumuman ?>
                     </p>
                 </div>
             </div>
@@ -356,12 +345,12 @@
                         </div>
                         <h3 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-4">Jadwal Gelombang Pendaftaran</h3>
                         <p class="text-slate-600 leading-relaxed text-sm md:text-base">
-                            Penerimaan Santri Baru Tahun Ajaran <strong class="text-emerald-600">2026/2027</strong> dilaksanakan melalui tiga periode gelombang. Proses pendaftaran dapat sewaktu-waktu ditutup lebih awal apabila kuota penerimaan santri telah terpenuhi.
+                            Penerimaan Santri Baru Tahun Ajaran <strong class="text-emerald-600"><?= esc($tahun_psb) ?></strong> dilaksanakan melalui tiga periode gelombang. Proses pendaftaran dapat sewaktu-waktu ditutup lebih awal apabila kuota penerimaan santri telah terpenuhi.
                         </p>
                     </div>
 
                     <?php
-                    // Logika Otomatis Pengecekan Bulan Aktif
+                    // Logika Otomatis Pengecekan Bulan Aktif (TETAP DIPERTAHANKAN)
                     $bulanSekarang = (int)date('n'); // Mengambil angka bulan saat ini (1-12)
                     $gelombangAktif = 0;
 
@@ -381,8 +370,8 @@
                             <span class="inline-block py-1.5 px-4 rounded-full <?= $gelombangAktif == 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700' ?> text-xs font-bold tracking-wider uppercase mb-5">
                                 Gelombang 1
                             </span>
-                            <h4 class="text-slate-800 font-extrabold text-lg md:text-xl mb-2 group-hover:text-emerald-600 transition-colors">1 Mar - 30 Mei 2026</h4>
-                            <p class="text-slate-500 text-xs leading-relaxed">Periode pendaftaran awal untuk Tahun Ajaran 2026/2027.</p>
+                            <h4 class="text-slate-800 font-extrabold text-lg md:text-xl mb-2 group-hover:text-emerald-600 transition-colors"><?= esc($gelombang_1[0]) ?></h4>
+                            <p class="text-slate-500 text-xs leading-relaxed"><?= esc($gelombang_1[1]) ?></p>
                         </div>
 
                         <div class="bg-gradient-to-br <?= $gelombangAktif == 2 ? 'from-emerald-50 border-emerald-300 shadow-md' : 'from-slate-50 border-slate-200' ?> to-white rounded-2xl border p-6 text-center hover:shadow-lg hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300 group relative overflow-hidden">
@@ -390,8 +379,8 @@
                             <span class="inline-block py-1.5 px-4 rounded-full <?= $gelombangAktif == 2 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700' ?> text-xs font-bold tracking-wider uppercase mb-5">
                                 Gelombang 2
                             </span>
-                            <h4 class="text-slate-800 font-extrabold text-lg md:text-xl mb-2 group-hover:text-emerald-600 transition-colors">1 Jun - 31 Ags 2026</h4>
-                            <p class="text-slate-500 text-xs leading-relaxed">Periode pendaftaran lanjutan setelah gelombang pertama berakhir.</p>
+                            <h4 class="text-slate-800 font-extrabold text-lg md:text-xl mb-2 group-hover:text-emerald-600 transition-colors"><?= esc($gelombang_2[0]) ?></h4>
+                            <p class="text-slate-500 text-xs leading-relaxed"><?= esc($gelombang_2[1]) ?></p>
                         </div>
 
                         <div class="bg-gradient-to-br <?= $gelombangAktif == 3 ? 'from-emerald-50 border-emerald-300 shadow-md' : 'from-slate-50 border-slate-200' ?> to-white rounded-2xl border p-6 text-center hover:shadow-lg hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300 group relative overflow-hidden">
@@ -399,8 +388,8 @@
                             <span class="inline-block py-1.5 px-4 rounded-full <?= $gelombangAktif == 3 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700' ?> text-xs font-bold tracking-wider uppercase mb-5">
                                 Gelombang 3
                             </span>
-                            <h4 class="text-slate-800 font-extrabold text-lg md:text-xl mb-2 group-hover:text-emerald-600 transition-colors">1 Sep - 31 Des 2026</h4>
-                            <p class="text-slate-500 text-xs leading-relaxed">Periode pendaftaran akhir sebelum tahun ajaran baru dimulai.</p>
+                            <h4 class="text-slate-800 font-extrabold text-lg md:text-xl mb-2 group-hover:text-emerald-600 transition-colors"><?= esc($gelombang_3[0]) ?></h4>
+                            <p class="text-slate-500 text-xs leading-relaxed"><?= esc($gelombang_3[1]) ?></p>
                         </div>
 
                     </div>
@@ -412,7 +401,7 @@
             <h3 class="text-2xl font-bold text-white mb-1 tracking-wide">KABAR GEMBIRA!</h3>
             <p class="text-emerald-100 text-sm mb-4">Meringankan ikhtiar ananda dalam menuntut ilmu agama.</p>
             <div class="inline-block bg-white text-emerald-800 font-black text-xl py-2 px-6 rounded-lg shadow-sm">
-                UANG PONDOK GRATIS
+                <?= esc($slogan_promo) ?>
             </div>
         </div>
 

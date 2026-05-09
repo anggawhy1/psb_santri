@@ -6,12 +6,17 @@ use App\Controllers\BaseController;
 use App\Models\PendaftarModel;
 use App\Models\PembayaranModel;
 use App\Models\UsersModel;
+use App\Models\DataPendidikanModel;
+use App\Models\DataOrangTuaModel;
+use App\Models\DataKesehatanModel;
+use App\Models\BerkasModel;
+use App\Models\JadwalWawancaraModel;
 
 class Pimpinan extends BaseController
 {
-    protected $pendaftarModel;
-    protected $pembayaranModel;
-    protected $userModel;
+    protected PendaftarModel $pendaftarModel;
+    protected PembayaranModel $pembayaranModel;
+    protected UsersModel $userModel;
 
     public function __construct()
     {
@@ -22,38 +27,40 @@ class Pimpinan extends BaseController
 
     public function dashboard()
     {
-        $db = \Config\Database::connect();
-
+        // 1. Total Pendaftar & Pembayaran Diterima
         $totalPendaftar = $this->pendaftarModel->countAllResults();
         $totalBayar     = $this->pembayaranModel->where('status_pembayaran', 'Diterima')->countAllResults();
 
-        $queryWawancara = $db->query("
-            SELECT COUNT(p.id_pendaftar) as total 
-            FROM pendaftar p
-            JOIN jadwal_wawancara j ON p.id_pendaftar = j.id_pendaftar
-            WHERE p.status_akhir IS NULL 
-               OR p.status_akhir = '' 
-               OR p.status_akhir = 'Menunggu'
-        ");
-        $totalWawancara = $queryWawancara->getRow()->total;
+        // 2. Total Wawancara (Menggunakan Query Builder dari Model)
+        $totalWawancara = $this->pendaftarModel
+            ->join('jadwal_wawancara j', 'pendaftar.id_pendaftar = j.id_pendaftar')
+            ->groupStart()
+                ->where('pendaftar.status_akhir IS NULL')
+                ->orWhere('pendaftar.status_akhir', '')
+                ->orWhere('pendaftar.status_akhir', 'Menunggu')
+            ->groupEnd()
+            ->countAllResults();
 
+        // 3. Status Lulus / Gagal
         $totalLulus     = $this->pendaftarModel->where('status_akhir', 'Lulus')->countAllResults();
         $totalGagal     = $this->pendaftarModel->where('status_akhir', 'Tidak Lulus')->countAllResults();
 
-        $queryPie = $db->query("SELECT program_pilihan, COUNT(id_pendaftar) as jumlah FROM pendaftar GROUP BY program_pilihan");
-        $pieData = $queryPie->getResultArray();
-        $queryLine = $db->query("
-            SELECT tgl, jumlah FROM (
-                SELECT DATE(created_at) as tgl, COUNT(id_pendaftar) as jumlah 
-                FROM pendaftar 
-                WHERE created_at IS NOT NULL 
-                GROUP BY DATE(created_at)
-                ORDER BY DATE(created_at) DESC
-                LIMIT 10
-            ) as subquery
-            ORDER BY tgl ASC
-        ");
-        $grafik_data = $queryLine->getResultArray();
+        // 4. Data Pie Chart
+        $pieData = $this->pendaftarModel
+            ->select('program_pilihan, COUNT(id_pendaftar) as jumlah')
+            ->groupBy('program_pilihan')
+            ->findAll();
+
+        // 5. Data Line Chart (10 Hari Terakhir)
+        $grafik_data_desc = $this->pendaftarModel
+            ->select('DATE(created_at) as tgl, COUNT(id_pendaftar) as jumlah')
+            ->where('created_at IS NOT NULL')
+            ->groupBy('DATE(created_at)')
+            ->orderBy('DATE(created_at)', 'DESC')
+            ->findAll(10);
+            
+        // Balik urutan array menjadi ASC (tanggal lama ke baru) pakai fungsi PHP
+        $grafik_data = array_reverse($grafik_data_desc); 
 
         $lineData = [];
         foreach ($grafik_data as $g) {
@@ -138,7 +145,12 @@ class Pimpinan extends BaseController
 
     private function _getCompleteData($id)
     {
-        $db = \Config\Database::connect();
+        // Inisialisasi Model secara lokal
+        $pendidikanModel = new DataPendidikanModel();
+        $ortuModel       = new DataOrangTuaModel();
+        $kesehatanModel  = new DataKesehatanModel();
+        $berkasModel     = new BerkasModel();
+        $jadwalModel     = new JadwalWawancaraModel();
 
         $pendaftar = $this->pendaftarModel->find($id);
         if (!$pendaftar) {
@@ -147,12 +159,14 @@ class Pimpinan extends BaseController
 
         return [
             'pendaftar'  => $pendaftar,
-            'pendidikan' => $db->table('data_pendidikan')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
-            'ortu'       => $db->table('data_orang_tua')->where('id_pendaftar', $id)->get()->getResultArray() ?? [],
-            'kesehatan'  => $db->table('data_kesehatan')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
-            'berkas'     => $db->table('berkas')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
-            'pembayaran' => $db->table('pembayaran')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
-            'jadwal'     => $db->table('jadwal_wawancara')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
+            // Gunakan first() untuk data tunggal (getRowArray)
+            // Gunakan findAll() untuk data banyak (getResultArray) seperti Orang Tua
+            'pendidikan' => $pendidikanModel->where('id_pendaftar', $id)->first() ?? [],
+            'ortu'       => $ortuModel->where('id_pendaftar', $id)->findAll() ?? [],
+            'kesehatan'  => $kesehatanModel->where('id_pendaftar', $id)->first() ?? [],
+            'berkas'     => $berkasModel->where('id_pendaftar', $id)->first() ?? [],
+            'pembayaran' => $this->pembayaranModel->where('id_pendaftar', $id)->first() ?? [],
+            'jadwal'     => $jadwalModel->where('id_pendaftar', $id)->first() ?? [],
         ];
     }
 
@@ -161,6 +175,7 @@ class Pimpinan extends BaseController
         $keyword = $this->request->getGet('keyword');
         $status_wawancara = $this->request->getGet('status_wawancara');
         $model = $this->pendaftarModel;
+        
         $model->select('pendaftar.*, data_pendidikan.asal_sekolah, jadwal_wawancara.tanggal_wawancara, jadwal_wawancara.tautan_video');
         $model->join('data_pendidikan', 'data_pendidikan.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $model->join('jadwal_wawancara', 'jadwal_wawancara.id_pendaftar = pendaftar.id_pendaftar', 'left');
@@ -194,6 +209,7 @@ class Pimpinan extends BaseController
         $sort    = $this->request->getGet('sort');
         $status  = $this->request->getGet('status');
         $model = $this->pendaftarModel;
+        
         $model->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas');
         $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');

@@ -10,47 +10,48 @@ use App\Models\DataKesehatanModel;
 use App\Models\PembayaranModel;
 use App\Models\BerkasModel;
 use App\Models\JadwalWawancaraModel;
+use App\Models\InformasiPsbModel;
 
 class Pendaftar extends BaseController
 {
-    protected $pendaftarModel;
-    protected $pendidikanModel;
-    protected $ortuModel;
-    protected $kesehatanModel;
-    protected $pembayaranModel;
-    protected $berkasModel;
+    protected PendaftarModel $pendaftarModel;
+    protected DataPendidikanModel $pendidikanModel;
+    protected DataOrangTuaModel $ortuModel;
+    protected DataKesehatanModel $kesehatanModel;
+    protected PembayaranModel $pembayaranModel;
+    protected BerkasModel $berkasModel;
+    protected JadwalWawancaraModel $jadwalModel;
+    protected InformasiPsbModel $infoPsbModel;
     protected $id_pendaftar;
-    protected $jadwalModel;
 
     public function __construct()
     {
-        $this->pendaftarModel = new PendaftarModel();
-        $this->pendidikanModel = new DataPendidikanModel();
-        $this->ortuModel = new DataOrangTuaModel();
-        $this->kesehatanModel = new DataKesehatanModel();
-        $this->pembayaranModel = new PembayaranModel();
-        $this->berkasModel = new BerkasModel();
-        $this->jadwalModel     = new JadwalWawancaraModel();
+        $this->pendaftarModel   = new PendaftarModel();
+        $this->pendidikanModel  = new DataPendidikanModel();
+        $this->ortuModel        = new DataOrangTuaModel();
+        $this->kesehatanModel   = new DataKesehatanModel();
+        $this->pembayaranModel  = new PembayaranModel();
+        $this->berkasModel      = new BerkasModel();
+        $this->jadwalModel      = new JadwalWawancaraModel();
+        $this->infoPsbModel     = new InformasiPsbModel();
 
         $this->id_pendaftar = session()->get('id_pendaftar');
     }
 
     public function dashboard()
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('login');
 
-        $db = \Config\Database::connect();
         $id = $this->id_pendaftar;
+        $pendaftar  = $this->pendaftarModel->find($id);
+        $pendidikan = $this->pendidikanModel->where('id_pendaftar', $id)->first();
+        $kesehatan  = $this->kesehatanModel->where('id_pendaftar', $id)->first();
+        $ortu       = $this->ortuModel->where('id_pendaftar', $id)->findAll();
+        $bayar      = $this->pembayaranModel->where('id_pendaftar', $id)->first();
+        $berkas     = $this->berkasModel->where('id_pendaftar', $id)->first();
+        $jadwal     = $this->jadwalModel->where('id_pendaftar', $id)->first();
+        $info_tahun = $this->infoPsbModel->find(1);
+        $tahun_psb  = $info_tahun ? $info_tahun['isi'] : '2026/2027';
 
-        $pendaftar  = $db->table('pendaftar')->where('id_pendaftar', $id)->get()->getRowArray();
-        $pendidikan = $db->table('data_pendidikan')->where('id_pendaftar', $id)->get()->getRowArray();
-        $kesehatan  = $db->table('data_kesehatan')->where('id_pendaftar', $id)->get()->getRowArray();
-        $ortu = $db->table('data_orang_tua')->where('id_pendaftar', $id)->get()->getResultArray();
-        $bayar  = $db->table('pembayaran')->where('id_pendaftar', $id)->get()->getRowArray();
-        $berkas = $db->table('berkas')->where('id_pendaftar', $id)->get()->getRowArray();
-        $jadwal = $db->table('jadwal_wawancara')->where('id_pendaftar', $id)->get()->getRowArray();
-        $info_tahun = $db->table('informasi_psb')->where('id_informasi', 1)->get()->getRowArray();
-        $tahun_psb  = $info_tahun ? $info_tahun['isi'] : '2025/2026';
         $data = [
             'title'      => 'Dashboard Utama',
             'pendaftar'  => $pendaftar,
@@ -68,8 +69,6 @@ class Pendaftar extends BaseController
 
     public function biodata()
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('login');
-
         $data = [
             'title'      => 'Biodata Diri',
             'pendaftar'  => $this->pendaftarModel->find($this->id_pendaftar),
@@ -83,8 +82,6 @@ class Pendaftar extends BaseController
 
     public function pembayaran()
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('login');
-
         $data = [
             'title' => 'Pembayaran',
             'bayar' => $this->pembayaranModel->where('id_pendaftar', $this->id_pendaftar)->first()
@@ -95,6 +92,23 @@ class Pendaftar extends BaseController
     public function uploadPembayaran()
     {
         $file = $this->request->getFile('bukti_bayar');
+
+        if ($file && $file->isValid()) {
+            $aturanValidasi = [
+                'bukti_bayar' => [
+                    'rules'  => 'is_image[bukti_bayar]|mime_in[bukti_bayar,image/jpg,image/jpeg,image/png]|max_size[bukti_bayar,2048]',
+                    'errors' => [
+                        'is_image' => 'File yang diupload harus berupa gambar.',
+                        'mime_in'  => 'Format gambar hanya diperbolehkan JPG, JPEG, atau PNG.',
+                        'max_size' => 'Ukuran file maksimal adalah 2 MB.'
+                    ]
+                ]
+            ];
+
+            if (!$this->validate($aturanValidasi)) {
+                return redirect()->back()->with('error', $this->validator->getError('bukti_bayar'));
+            }
+        }
 
         if ($file->isValid() && !$file->hasMoved()) {
             $newName = $file->getRandomName();
@@ -123,8 +137,6 @@ class Pendaftar extends BaseController
 
     public function berkas()
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('login');
-
         $data = [
             'title'      => 'Unggah Berkas',
             'berkas'     => $this->berkasModel->where('id_pendaftar', $this->id_pendaftar)->first(),
@@ -140,6 +152,22 @@ class Pendaftar extends BaseController
         $file = $this->request->getFile('file_berkas');
 
         $allowed_types = ['akta_kelahiran', 'kartu_keluarga', 'ktp_ortu', 'ktp_pendaftar', 'ijazah_raport', 'pas_foto'];
+
+        if ($file && $file->isValid()) {
+            $aturanValidasi = [
+                'file_berkas' => [
+                    'rules'  => 'mime_in[file_berkas,image/jpg,image/jpeg,image/png,application/pdf]|max_size[file_berkas,2048]',
+                    'errors' => [
+                        'mime_in'  => 'Format file hanya diperbolehkan JPG, JPEG, PNG, atau PDF.',
+                        'max_size' => 'Ukuran file maksimal adalah 2 MB.'
+                    ]
+                ]
+            ];
+
+            if (!$this->validate($aturanValidasi)) {
+                return redirect()->back()->with('error', $this->validator->getError('file_berkas'));
+            }
+        }
 
         if (in_array($jenis, $allowed_types) && $file->isValid() && !$file->hasMoved()) {
 
@@ -165,17 +193,14 @@ class Pendaftar extends BaseController
 
         return redirect()->back()->with('error', 'Gagal upload file atau format salah.');
     }
-
     public function status()
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('login');
-
         $data = [
             'title'     => 'Status Pendaftaran',
             'pendaftar' => $this->pendaftarModel->find($this->id_pendaftar),
             'berkas'    => $this->berkasModel->where('id_pendaftar', $this->id_pendaftar)->first(),
             'bayar'     => $this->pembayaranModel->where('id_pendaftar', $this->id_pendaftar)->first(),
-            'jadwal'    => $this->jadwalModel->where('id_pendaftar', $this->id_pendaftar)->first(), // Ambil Jadwal
+            'jadwal'    => $this->jadwalModel->where('id_pendaftar', $this->id_pendaftar)->first(),
         ];
         return view('pendaftar/status', $data);
     }

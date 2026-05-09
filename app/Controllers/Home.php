@@ -4,25 +4,24 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\PromosiModel;
+use App\Models\InformasiPsbModel; // <-- Tambahkan ini
 
 class Home extends BaseController
 {
-    protected $promosiModel;
+    // Tambahkan tipe class biar Intelephense VS Code nggak garis biru
+    protected PromosiModel $promosiModel;
+    protected InformasiPsbModel $infoPsbModel; // <-- Tambahkan ini
 
     public function __construct()
     {
         $this->promosiModel = new PromosiModel();
+        $this->infoPsbModel = new InformasiPsbModel(); // <-- Inisialisasi Model
     }
 
     public function index()
     {
-        $db = \Config\Database::connect();
-
-        $info_tahun = $db->table('informasi_psb')
-            ->where('id_informasi', 1)
-            ->get()
-            ->getRowArray();
-
+        // 1. Ambil Info Tahun (Pakai Model)
+        $info_tahun = $this->infoPsbModel->find(1);
         $tahun_psb = $info_tahun ? $info_tahun['isi'] : '2026/2027';
 
         $data = [
@@ -47,18 +46,65 @@ class Home extends BaseController
 
     public function psb()
     {
-        $db = \Config\Database::connect();
+        // 1. Ambil Info Tahun PSB
+        $info_tahun = $this->infoPsbModel->find(1);
+        $tahun_psb = $info_tahun ? $info_tahun['isi'] : '2026/2027';
 
-        $info_tahun = $db->table('informasi_psb')
-            ->where('id_informasi', 1)
-            ->get()
-            ->getRowArray();
+        // 2. Ambil Info Sekolah Tujuan
+        $infoSekolah = $this->infoPsbModel->where('judul', 'Sekolah Tujuan')->first();
 
-        $tahun_psb = $info_tahun ? $info_tahun['isi'] : '2025/2026';
+        $daftar_sekolah = [];
+        if ($infoSekolah && !empty($infoSekolah['isi'])) {
+            $arraySekolah = explode(',', $infoSekolah['isi']);
+            $daftar_sekolah = array_map('trim', $arraySekolah);
+        }
 
+        // 3. Ambil Info Biaya Pendaftaran
+        $infoBiaya = $this->infoPsbModel->where('judul', 'Biaya Pendaftaran')->first();
+        $biaya_pendaftaran = $infoBiaya ? $infoBiaya['isi'] : 'Rp 200.000';
+
+        // 4. Ambil Info Pengumuman (Perhatian)
+        $infoPengumuman = $this->infoPsbModel->where('judul', 'Pengumuman')->first();
+        $pengumuman = $infoPengumuman ? $infoPengumuman['isi'] : 'Untuk saat ini, kami baru membuka penerimaan pendaftaran khusus untuk <strong class="text-amber-900 border-b border-amber-400">Santri Putra</strong>.';
+
+        // ============================================================ //
+        // 5. Ambil Info Gelombang (DIPISAH PAKAI TANDA | )
+        // ============================================================ //
+        // Bikin variabel lokal untuk dilempar ke dalam closure
+        $infoModel = $this->infoPsbModel;
+        $getGelombang = function ($judul) use ($infoModel) {
+            $data = $infoModel->where('judul', $judul)->first();
+            if ($data && !empty($data['isi'])) {
+                $pecah = explode('|', $data['isi']);
+                return [trim($pecah[0]), trim($pecah[1] ?? '')];
+            }
+            return ['Jadwal Menyusul', 'Deskripsi belum tersedia.'];
+        };
+
+        // Tarik data masing-masing gelombang
+        $gelombang_1 = $getGelombang('Gelombang 1');
+        $gelombang_2 = $getGelombang('Gelombang 2');
+        $gelombang_3 = $getGelombang('Gelombang 3');
+
+        // ============================================================ //
+        // 6. Ambil Info Slogan Promo
+        // ============================================================ //
+        $infoSlogan = $this->infoPsbModel->where('judul', 'Slogan Promo')->first();
+        $slogan_promo = $infoSlogan ? $infoSlogan['isi'] : 'UANG PONDOK GRATIS';
+
+        // ============================================================ //
+        // 7. Masukkan SEMUANYA ke $data buat dikirim ke View
+        // ============================================================ //
         $data = [
-            'title'     => 'Info Pendaftaran | Ponpes Banyu Agung Ibnu Saut Bintoro',
-            'tahun_psb' => $tahun_psb
+            'title'             => 'Info Pendaftaran | Ponpes Banyu Agung Ibnu Saut Bintoro',
+            'tahun_psb'         => $tahun_psb,
+            'daftar_sekolah'    => $daftar_sekolah,
+            'biaya_pendaftaran' => $biaya_pendaftaran,
+            'pengumuman'        => $pengumuman,
+            'gelombang_1'       => $gelombang_1,
+            'gelombang_2'       => $gelombang_2,
+            'gelombang_3'       => $gelombang_3,
+            'slogan_promo'      => $slogan_promo,
         ];
 
         return view('psb', $data);
@@ -72,7 +118,22 @@ class Home extends BaseController
 
     public function program()
     {
-        $data = ['title' => 'Program Pendidikan'];
+        // 1. Tarik data "Sekolah Tujuan" dari tabel informasi_psb (Pakai Model)
+        $infoSekolah = $this->infoPsbModel->where('judul', 'Sekolah Tujuan')->first();
+
+        $daftar_sekolah = [];
+
+        // 2. Pecah teks koma jadi Array
+        if ($infoSekolah && !empty($infoSekolah['isi'])) {
+            $arraySekolah = explode(',', $infoSekolah['isi']);
+            $daftar_sekolah = array_map('trim', $arraySekolah);
+        }
+
+        $data = [
+            'title'          => 'Program Pendidikan',
+            'daftar_sekolah' => $daftar_sekolah
+        ];
+
         return view('program', $data);
     }
 
@@ -90,7 +151,6 @@ class Home extends BaseController
 
     public function detailBerita($id)
     {
-
         $berita = $this->promosiModel
             ->select('promosi.*, users.nama_lengkap as nama_penulis')
             ->join('users', 'users.id_user = promosi.id_user')
@@ -110,7 +170,6 @@ class Home extends BaseController
         ];
         return view('berita_detail', $data);
     }
-
 
     public function prestasi()
     {

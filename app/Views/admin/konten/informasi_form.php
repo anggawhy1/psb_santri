@@ -45,7 +45,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path></svg>
                         </div>
-                        <input type="text" name="judul" value="<?= esc($row['judul']) ?>" required class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-medium text-gray-800 placeholder-gray-400">
+                        <input type="text" name="judul" value="<?= esc($row['judul']) ?>" readonly class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 bg-gray-200 cursor-not-allowed font-bold text-gray-500 transition shadow-inner select-none focus:outline-none">
                     </div>
                     <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

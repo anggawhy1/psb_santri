@@ -68,7 +68,7 @@ $routes->group('admin', function($routes) {
 });
 
 $routes->group('pimpinan', function($routes) {
-    // DASHBOARD
+
     $routes->get('dashboard', 'Pimpinan::dashboard');
     
     // KELOLA ADMIN

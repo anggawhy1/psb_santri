@@ -12,100 +12,90 @@ use App\Models\DataKesehatanModel;
 use App\Models\PembayaranModel;
 use App\Models\BerkasModel;
 use App\Models\JadwalWawancaraModel;
+use App\Models\UsersModel;
 
 class Admin extends BaseController
 {
-    protected $promosiModel;
-    protected $infoPsbModel;
-    protected $pendaftarModel;
-    protected $pendidikanModel;
-    protected $ortuModel;
-    protected $kesehatanModel;
-    protected $berkasModel;
-    protected $pembayaranModel;
-    protected $jadwalModel;
+    protected PromosiModel $promosiModel;
+    protected InformasiPsbModel $infoPsbModel;
+    protected PendaftarModel $pendaftarModel;
+    protected DataPendidikanModel $pendidikanModel;
+    protected DataOrangTuaModel $ortuModel;
+    protected DataKesehatanModel $kesehatanModel;
+    protected BerkasModel $berkasModel;
+    protected PembayaranModel $pembayaranModel;
+    protected JadwalWawancaraModel $jadwalModel;
+    protected UsersModel $userModel; // Tambahan
 
     public function __construct()
     {
-        $this->promosiModel = new PromosiModel();
-        $this->infoPsbModel = new InformasiPsbModel();
-        $this->pendaftarModel = new PendaftarModel();
+        $this->promosiModel    = new PromosiModel();
+        $this->infoPsbModel    = new InformasiPsbModel();
+        $this->pendaftarModel  = new PendaftarModel();
         $this->pendidikanModel = new DataPendidikanModel();
-        $this->ortuModel = new DataOrangTuaModel();
-        $this->kesehatanModel = new DataKesehatanModel();
-        $this->berkasModel = new BerkasModel();
+        $this->ortuModel       = new DataOrangTuaModel();
+        $this->kesehatanModel  = new DataKesehatanModel();
+        $this->berkasModel     = new BerkasModel();
         $this->pembayaranModel = new PembayaranModel();
-        $this->jadwalModel = new JadwalWawancaraModel();
+        $this->jadwalModel     = new JadwalWawancaraModel();
+        $this->userModel       = new UsersModel(); // Inisialisasi
     }
 
     public function dashboard()
     {
-        if (!session()->get('isLoggedIn') || (session()->get('role') != 'admin' && session()->get('role') != 'pimpinan')) {
-            return redirect()->to('admin/login');
-        }
 
-        $db = \Config\Database::connect();
+        $wait_bayar  = $this->pembayaranModel->where('status_pembayaran', 'Menunggu')->countAllResults();
+        $wait_berkas = $this->berkasModel->where('status_berkas', 'Menunggu')->countAllResults();
 
-        $wait_bayar = $db->table('pembayaran')->where('status_pembayaran', 'Menunggu')->countAllResults();
-        $wait_berkas = $db->table('berkas')->where('status_berkas', 'Menunggu')->countAllResults();
+        $wait_wawancara = $this->pendaftarModel
+            ->join('pembayaran b', 'pendaftar.id_pendaftar = b.id_pendaftar')
+            ->join('berkas k', 'pendaftar.id_pendaftar = k.id_pendaftar')
+            ->join('jadwal_wawancara j', 'pendaftar.id_pendaftar = j.id_pendaftar', 'left')
+            ->where('b.status_pembayaran', 'Diterima')
+            ->where('k.status_berkas', 'Diterima')
+            ->where('j.id_pendaftar IS NULL')
+            ->countAllResults();
 
-        $query_wawancara = $db->query("
-            SELECT COUNT(p.id_pendaftar) as total 
-            FROM pendaftar p
-            JOIN pembayaran b ON p.id_pendaftar = b.id_pendaftar
-            JOIN berkas k ON p.id_pendaftar = k.id_pendaftar
-            LEFT JOIN jadwal_wawancara j ON p.id_pendaftar = j.id_pendaftar
-            WHERE b.status_pembayaran = 'Diterima' 
-              AND k.status_berkas = 'Diterima' 
-              AND j.id_pendaftar IS NULL
-        ");
-        $wait_wawancara = $query_wawancara->getRow()->total;
+        $wait_hasil = $this->pendaftarModel
+            ->join('jadwal_wawancara j', 'pendaftar.id_pendaftar = j.id_pendaftar')
+            ->groupStart()
+            ->where('pendaftar.status_akhir IS NULL')
+            ->orWhere('pendaftar.status_akhir', '')
+            ->orWhere('pendaftar.status_akhir', 'Menunggu')
+            ->groupEnd()
+            ->countAllResults();
 
-        $query_hasil = $db->query("
-            SELECT COUNT(p.id_pendaftar) as total 
-            FROM pendaftar p
-            JOIN jadwal_wawancara j ON p.id_pendaftar = j.id_pendaftar
-            WHERE p.status_akhir IS NULL 
-               OR p.status_akhir = '' 
-               OR p.status_akhir = 'Menunggu'
-        ");
-        $wait_hasil = $query_hasil->getRow()->total;
+        $total_pendaftar = $this->pendaftarModel->countAllResults();
+        $total_lulus     = $this->pendaftarModel->where('status_akhir', 'Lulus')->countAllResults();
+        $total_ditolak   = $this->pendaftarModel->where('status_akhir', 'Tidak Lulus')->countAllResults();
 
-        $total_pendaftar = $db->table('pendaftar')->countAllResults();
-        $total_lulus = $db->table('pendaftar')->where('status_akhir', 'Lulus')->countAllResults();
-        $total_ditolak = $db->table('pendaftar')->where('status_akhir', 'Tidak Lulus')->countAllResults();
+        $grafik_data_desc = $this->pendaftarModel
+            ->select('DATE(created_at) as tgl, COUNT(id_pendaftar) as jumlah')
+            ->where('created_at IS NOT NULL')
+            ->groupBy('DATE(created_at)')
+            ->orderBy('DATE(created_at)', 'DESC')
+            ->findAll(10);
 
-        $grafik_query = $db->query("
-            SELECT tgl, jumlah FROM (
-                SELECT DATE(created_at) as tgl, COUNT(id_pendaftar) as jumlah
-                FROM pendaftar
-                WHERE created_at IS NOT NULL
-                GROUP BY DATE(created_at)
-                ORDER BY DATE(created_at) DESC
-                LIMIT 10
-            ) as subquery
-            ORDER BY tgl ASC
-        ");
-        $grafik_data = $grafik_query->getResultArray();
+        $grafik_data = array_reverse($grafik_data_desc);
 
         $label_grafik = [];
-        $data_grafik = [];
+        $data_grafik  = [];
         foreach ($grafik_data as $g) {
-            $label_grafik[] = date('d M Y', strtotime($g['tgl'])); // Contoh: 12 Nov 2023
-            $data_grafik[] = $g['jumlah'];
+            $label_grafik[] = date('d M Y', strtotime($g['tgl']));
+            $data_grafik[]  = $g['jumlah'];
         }
 
         $data = [
-            'title'             => 'Dashboard Admin',
-            'wait_bayar'        => $wait_bayar,
-            'wait_berkas'       => $wait_berkas,
-            'wait_wawancara'    => $wait_wawancara,
-            'wait_hasil'        => $wait_hasil,
-            'total_pendaftar'   => $total_pendaftar,
-            'total_lulus'       => $total_lulus,
-            'total_ditolak'     => $total_ditolak,
-            'label_grafik'      => json_encode($label_grafik),
-            'data_grafik'       => json_encode($data_grafik)
+            'title'           => 'Dashboard Admin',
+            'wait_bayar'      => $wait_bayar,
+            'wait_berkas'     => $wait_berkas,
+            'wait_wawancara'  => $wait_wawancara,
+            'wait_hasil'      => $wait_hasil,
+            'total_pendaftar' => $total_pendaftar,
+            'total_lulus'     => $total_lulus,
+            'total_ditolak'   => $total_ditolak,
+            'label_grafik'    => json_encode($label_grafik),
+            'data_grafik'     => json_encode($data_grafik)
         ];
 
         return view('admin/dashboard', $data);
@@ -149,7 +139,6 @@ class Admin extends BaseController
 
     public function tambahPromosi($type)
     {
-
         if (!in_array($type, ['berita', 'prestasi', 'galeri'])) {
             return redirect()->to('admin/dashboard');
         }
@@ -165,7 +154,23 @@ class Admin extends BaseController
 
     public function savePromosi()
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('admin/login');
+        $cekFile = $this->request->getFile('gambar');
+        if ($cekFile && $cekFile->isValid()) {
+            $aturanValidasi = [
+                'gambar' => [
+                    'rules'  => 'is_image[gambar]|mime_in[gambar,image/jpg,image/jpeg,image/png]|max_size[gambar,2048]',
+                    'errors' => [
+                        'is_image' => 'File yang diupload harus berupa gambar.',
+                        'mime_in'  => 'Format gambar hanya diperbolehkan JPG, JPEG, atau PNG.',
+                        'max_size' => 'Ukuran gambar maksimal adalah 2 MB.'
+                    ]
+                ]
+            ];
+
+            if (!$this->validate($aturanValidasi)) {
+                return redirect()->back()->withInput()->with('error', $this->validator->getError('gambar'));
+            }
+        }
 
         $type = (string)$this->request->getPost('type');
         $file = $this->request->getFile('gambar');
@@ -210,7 +215,6 @@ class Admin extends BaseController
 
     public function updatePromosi()
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('admin/login');
 
         $id = $this->request->getPost('id_promosi');
 
@@ -218,6 +222,24 @@ class Admin extends BaseController
 
         if (!$dataLama) {
             return redirect()->to('admin/dashboard')->with('error', 'Data asli tidak ditemukan.');
+        }
+
+        $cekFile = $this->request->getFile('gambar');
+        if ($cekFile && $cekFile->isValid()) {
+            $aturanValidasi = [
+                'gambar' => [
+                    'rules'  => 'is_image[gambar]|mime_in[gambar,image/jpg,image/jpeg,image/png]|max_size[gambar,2048]',
+                    'errors' => [
+                        'is_image' => 'File yang diupload harus berupa gambar.',
+                        'mime_in'  => 'Format gambar hanya diperbolehkan JPG, JPEG, atau PNG.',
+                        'max_size' => 'Ukuran gambar maksimal adalah 2 MB.'
+                    ]
+                ]
+            ];
+
+            if (!$this->validate($aturanValidasi)) {
+                return redirect()->back()->withInput()->with('error', $this->validator->getError('gambar'));
+            }
         }
 
         $type = (string)$dataLama['type'];
@@ -245,7 +267,6 @@ class Admin extends BaseController
 
     public function deletePromosi($id)
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('admin/login');
 
         if (empty($id)) return redirect()->back();
 
@@ -295,7 +316,6 @@ class Admin extends BaseController
 
     public function updateInformasi()
     {
-        if (!session()->get('isLoggedIn')) return redirect()->to('admin/login');
 
         $id = $this->request->getPost('id_informasi');
 
@@ -304,8 +324,7 @@ class Admin extends BaseController
         }
 
         $this->infoPsbModel->update($id, [
-            'judul' => $this->request->getPost('judul'),
-            'isi'   => $this->request->getPost('isi')
+            'isi' => $this->request->getPost('isi')
         ]);
 
         return redirect()->to('admin/informasi')->with('success', 'Informasi berhasil diperbarui.');
@@ -313,45 +332,43 @@ class Admin extends BaseController
 
     public function pendaftar()
     {
-
-        $keyword  = $this->request->getGet('keyword'); // Pencarian Nama/No.Reg
+        $keyword  = $this->request->getGet('keyword');
         $fBayar   = $this->request->getGet('status_pembayaran');
         $fBerkas  = $this->request->getGet('status_berkas');
         $fJadwal  = $this->request->getGet('status_wawancara');
         $fLulus   = $this->request->getGet('status_akhir');
 
-        $db = \Config\Database::connect();
-        $builder = $this->pendaftarModel->builder();
+        $model = $this->pendaftarModel;
 
-        $builder->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas, jadwal_wawancara.status_wawancara, jadwal_wawancara.tanggal_wawancara');
-        $builder->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
-        $builder->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
-        $builder->join('jadwal_wawancara', 'jadwal_wawancara.id_pendaftar = pendaftar.id_pendaftar', 'left');
-        $builder->where('pendaftar.status_akhir', 'Menunggu');
+        $model->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas, jadwal_wawancara.status_wawancara, jadwal_wawancara.tanggal_wawancara');
+        $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
+        $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
+        $model->join('jadwal_wawancara', 'jadwal_wawancara.id_pendaftar = pendaftar.id_pendaftar', 'left');
+        $model->where('pendaftar.status_akhir', 'Menunggu');
 
         if ($keyword) {
-            $builder->groupStart()
+            $model->groupStart()
                 ->like('pendaftar.nama_lengkap', $keyword)
                 ->orLike('pendaftar.no_registrasi', $keyword)
                 ->groupEnd();
         }
         if ($fBayar) {
-            $builder->where('pembayaran.status_pembayaran', $fBayar);
+            $model->where('pembayaran.status_pembayaran', $fBayar);
         }
         if ($fBerkas) {
-            $builder->where('berkas.status_berkas', $fBerkas);
+            $model->where('berkas.status_berkas', $fBerkas);
         }
         if ($fJadwal) {
-            if ($fJadwal == 'Belum') $builder->where('jadwal_wawancara.id_jadwal IS NULL');
-            else $builder->where('jadwal_wawancara.status_wawancara', $fJadwal);
+            if ($fJadwal == 'Belum') $model->where('jadwal_wawancara.id_jadwal IS NULL');
+            else $model->where('jadwal_wawancara.status_wawancara', $fJadwal);
         }
 
-        $builder->orderBy('pendaftar.id_pendaftar', 'DESC');
+        $model->orderBy('pendaftar.id_pendaftar', 'DESC');
 
         $data = [
             'title'    => 'Data Pendaftar Masuk',
-            'data'     => $this->pendaftarModel->paginate(10, 'pendaftar'),
-            'pager'    => $this->pendaftarModel->pager,
+            'data'     => $model->paginate(10, 'pendaftar'),
+            'pager'    => $model->pager,
             'keyword'  => $keyword,
             'f_bayar'  => $fBayar,
             'f_berkas' => $fBerkas,
@@ -366,7 +383,9 @@ class Admin extends BaseController
         $keyword = $this->request->getGet('keyword');
         $sort    = $this->request->getGet('sort');
         $status  = $this->request->getGet('status');
+
         $model = $this->pendaftarModel;
+
         $model->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas');
         $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');
@@ -414,8 +433,6 @@ class Admin extends BaseController
 
     private function _getAllData($id)
     {
-        $db = \Config\Database::connect();
-
         $pendaftar = $this->pendaftarModel->find($id);
         if (!$pendaftar) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Pendaftar tidak ditemukan");
@@ -423,12 +440,12 @@ class Admin extends BaseController
 
         return [
             'pendaftar'  => $pendaftar,
-            'pendidikan' => $db->table('data_pendidikan')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
-            'ortu'       => $db->table('data_orang_tua')->where('id_pendaftar', $id)->get()->getResultArray() ?? [],
-            'kesehatan'  => $db->table('data_kesehatan')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
-            'berkas'     => $db->table('berkas')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
-            'pembayaran' => $db->table('pembayaran')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
-            'jadwal'     => $db->table('jadwal_wawancara')->where('id_pendaftar', $id)->get()->getRowArray() ?? [],
+            'pendidikan' => $this->pendidikanModel->where('id_pendaftar', $id)->first() ?? [],
+            'ortu'       => $this->ortuModel->where('id_pendaftar', $id)->findAll() ?? [],
+            'kesehatan'  => $this->kesehatanModel->where('id_pendaftar', $id)->first() ?? [],
+            'berkas'     => $this->berkasModel->where('id_pendaftar', $id)->first() ?? [],
+            'pembayaran' => $this->pembayaranModel->where('id_pendaftar', $id)->first() ?? [],
+            'jadwal'     => $this->jadwalModel->where('id_pendaftar', $id)->first() ?? [],
         ];
     }
 
@@ -436,7 +453,7 @@ class Admin extends BaseController
     {
         $data = $this->_getAllData($id);
         $data['title'] = 'Edit Data Formulir';
-        $data['mode']  = 'formulir'; // Penanda Mode
+        $data['mode']  = 'formulir';
         return view('admin/pendaftar/detail', $data);
     }
 
@@ -491,7 +508,6 @@ class Admin extends BaseController
     public function updateDataPendaftar()
     {
         $id = $this->request->getPost('id_pendaftar');
-        $db = \Config\Database::connect();
 
         $this->pendaftarModel->update($id, [
             'nama_lengkap'    => $this->request->getPost('nama_lengkap'),
@@ -507,7 +523,7 @@ class Admin extends BaseController
             'alamat_lengkap'  => $this->request->getPost('alamat_lengkap'),
         ]);
 
-        $db->table('data_pendidikan')->where('id_pendaftar', $id)->update([
+        $this->pendidikanModel->where('id_pendaftar', $id)->set([
             'status'                      => $this->request->getPost('status_pendidikan'),
             'nama_pt'                     => $this->request->getPost('nama_pt'),
             'nisn'                        => $this->request->getPost('nisn'),
@@ -517,13 +533,13 @@ class Admin extends BaseController
             'jenjang_pendidikan_didaftar' => $this->request->getPost('jenjang_pendidikan_didaftar'),
             'nama_sekolah'                => $this->request->getPost('nama_sekolah'),
             'prestasi'                    => $this->request->getPost('prestasi'),
-        ]);
+        ])->update();
 
-        $db->table('data_kesehatan')->where('id_pendaftar', $id)->update([
+        $this->kesehatanModel->where('id_pendaftar', $id)->set([
             'gol_darah'        => $this->request->getPost('gol_darah'),
             'alergi'           => $this->request->getPost('alergi'),
             'riwayat_penyakit' => $this->request->getPost('riwayat_penyakit'),
-        ]);
+        ])->update();
 
         $id_ortu         = $this->request->getPost('id_ortu');
         $hubungan_ortu   = $this->request->getPost('hubungan_ortu');
@@ -537,7 +553,8 @@ class Admin extends BaseController
         if (!empty($id_ortu)) {
             for ($i = 0; $i < count($id_ortu); $i++) {
                 if (!empty($id_ortu[$i])) {
-                    $db->table('data_orang_tua')->where('id', $id_ortu[$i])->update([
+                    // Update ortu menggunakan primary key id_ortu
+                    $this->ortuModel->update($id_ortu[$i], [
                         'hubungan'   => $hubungan_ortu[$i],
                         'nama'       => $nama_ortu[$i],
                         'pekerjaan'  => $pekerjaan_ortu[$i],
@@ -556,7 +573,9 @@ class Admin extends BaseController
     public function verifikasiPembayaran()
     {
         $id = $this->request->getPost('id_pendaftar');
-        $this->pembayaranModel->where('id_pendaftar', $id)->set(['status_pembayaran' => $this->request->getPost('status'), 'keterangan' => $this->request->getPost('keterangan')])->update();
+        $this->pembayaranModel->where('id_pendaftar', $id)
+            ->set(['status_pembayaran' => $this->request->getPost('status'), 'keterangan' => $this->request->getPost('keterangan')])
+            ->update();
         return redirect()->to('admin/viewPembayaran/' . $id)->with('success', 'Pembayaran diperbarui.');
     }
 
@@ -577,11 +596,16 @@ class Admin extends BaseController
     {
         $id = $this->request->getPost('id_pendaftar');
         $data = ['id_pendaftar' => $id, 'tanggal_wawancara' => $this->request->getPost('tanggal') . ' ' . $this->request->getPost('jam'), 'tautan_video' => $this->request->getPost('lokasi'), 'status_wawancara' => 'Dijadwalkan'];
+
         $cek = $this->jadwalModel->where('id_pendaftar', $id)->first();
-        if ($cek) $this->jadwalModel->update($cek['id_jadwal'], $data);
-        else $this->jadwalModel->insert($data);
+        if ($cek) {
+            $this->jadwalModel->update($cek['id_jadwal'], $data);
+        } else {
+            $this->jadwalModel->insert($data);
+        }
         return redirect()->to('admin/viewWawancara/' . $id)->with('success', 'Jadwal disimpan.');
     }
+
     public function setKelulusan()
     {
         $id = $this->request->getPost('id_pendaftar');
@@ -591,14 +615,13 @@ class Admin extends BaseController
 
     public function profile()
     {
-        $db = \Config\Database::connect();
         $idUser = session()->get('id_user');
 
         if (!$idUser) {
             return redirect()->to('/login')->with('error', 'Sesi habis, silakan login kembali.');
         }
 
-        $user = $db->table('users')->where('id_user', $idUser)->get()->getRowArray();
+        $user = $this->userModel->find($idUser);
 
         if (!$user) {
             session()->destroy();
@@ -615,25 +638,23 @@ class Admin extends BaseController
 
     public function updateProfile()
     {
-        $db = \Config\Database::connect();
         $idUser = session()->get('id_user');
 
-        $username   = $this->request->getPost('username');
-        $passOld    = $this->request->getPost('password_old');
-        $passNew    = $this->request->getPost('password');
+        $username    = $this->request->getPost('username');
+        $passOld     = $this->request->getPost('password_old');
+        $passNew     = $this->request->getPost('password');
         $passConfirm = $this->request->getPost('password_confirm');
 
         $dataUpdate = ['username' => $username];
 
         if (!empty($passNew)) {
-
-            $currentUser = $db->table('users')->where('id_user', $idUser)->get()->getRowArray();
+            $currentUser = $this->userModel->find($idUser);
 
             if (empty($passOld)) {
                 return redirect()->back()->with('error', 'Masukkan password lama untuk mengganti password.');
             }
 
-            if (!password_verify($passOld, $currentUser['password'])) {
+            if (!password_verify((string)$passOld, (string)$currentUser['password'])) {
                 return redirect()->back()->with('error', 'Password lama salah!');
             }
 
@@ -644,7 +665,7 @@ class Admin extends BaseController
             $dataUpdate['password'] = password_hash($passNew, PASSWORD_DEFAULT);
         }
 
-        $db->table('users')->where('id_user', $idUser)->update($dataUpdate);
+        $this->userModel->update($idUser, $dataUpdate);
 
         session()->set('username', $username);
 

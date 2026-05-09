@@ -182,10 +182,14 @@
 
                         <select name="nama_sekolah" id="nama_sekolah_select" class="w-full border-slate-200 bg-slate-50 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 px-4 py-3 transition shadow-sm">
                             <option value="" disabled selected>- Pilih Sekolah -</option>
-                            <option value="MTs Negeri 7 Bantul" <?= old('nama_sekolah') == 'MTs Negeri 7 Bantul' ? 'selected' : '' ?>>MTs Negeri 7 Bantul</option>
-                            <option value="SMP Negeri 1 Piyungan" <?= old('nama_sekolah') == 'SMP Negeri 1 Piyungan' ? 'selected' : '' ?>>SMP Negeri 1 Piyungan</option>
-                            <option value="SMP Negeri 2 Piyungan" <?= old('nama_sekolah') == 'SMP Negeri 2 Piyungan' ? 'selected' : '' ?>>SMP Negeri 2 Piyungan</option>
-                            <option value="SMA Negeri 1 Piyungan" <?= old('nama_sekolah') == 'SMA Negeri 1 Piyungan' ? 'selected' : '' ?>>SMA Negeri 1 Piyungan</option>
+
+                            <?php if (!empty($daftar_sekolah)) : ?>
+                                <?php foreach ($daftar_sekolah as $sekolah) : ?>
+                                    <option value="<?= esc($sekolah) ?>" <?= old('nama_sekolah') == $sekolah ? 'selected' : '' ?>>
+                                        <?= esc($sekolah) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                             <option value="Lainnya" <?= old('nama_sekolah') == 'Lainnya' ? 'selected' : '' ?>>Sekolah Terdekat Lainnya</option>
                         </select>
 
