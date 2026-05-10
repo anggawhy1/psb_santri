@@ -33,19 +33,22 @@ class Auth extends BaseController
 
     public function index()
     {
+
         if (session()->get('isLoggedIn')) {
-            return redirect()->to('/pendaftar/dashboard');
+            if (session()->get('role') == 'admin') {
+                return redirect()->to(base_url('admin/dashboard'));
+            } elseif (session()->get('role') == 'pimpinan') {
+                return redirect()->to(base_url('pimpinan/dashboard'));
+            } elseif (session()->get('id_pendaftar')) {
+                return redirect()->to(base_url('pendaftar/dashboard'));
+            }
         }
         return view('auth/login');
     }
 
     public function register()
     {
-        if (session()->get('isLoggedIn')) {
-            return redirect()->to('/pendaftar/dashboard');
-        }
 
-        // Tarik data dari tabel informasi_psb (menggunakan Model)
         $infoSekolah = $this->infoPsbModel->where('judul', 'Sekolah Tujuan')->first();
 
         $daftar_sekolah = [];
@@ -65,11 +68,21 @@ class Auth extends BaseController
 
     public function attemptRegister()
     {
-        // 1. Validasi Dasar (Data Diri Utama)
+
         $rules = [
             'nama_lengkap'      => 'required',
-            'email'             => 'required|valid_email|is_unique[pendaftar.email]',
-            'nik'               => 'required|numeric|min_length[16]',
+            'email'             => [
+                'rules'  => 'required|valid_email|is_unique[pendaftar.email]',
+                'errors' => [
+                    'is_unique' => 'Email ini sudah terdaftar! Silakan gunakan email lain.'
+                ]
+            ],
+            'nik'               => [
+                'rules'  => 'required|numeric|min_length[16]|is_unique[pendaftar.nik]',
+                'errors' => [
+                    'is_unique' => 'NIK ini sudah terdaftar! Satu NIK hanya bisa digunakan untuk satu kali pendaftaran.'
+                ]
+            ],
             'no_kk'             => 'required|numeric|min_length[16]',
             'tempat_lahir'      => 'required',
             'tanggal_lahir'     => 'required',
@@ -106,7 +119,7 @@ class Auth extends BaseController
 
         // Menggunakan koneksi DB bawaan Model untuk Transaksi
         $this->pendaftarModel->db->transStart();
-        
+
         $tahun = date('Y');
         $random = strtoupper(substr(uniqid(), -4));
         $no_registrasi = "PSB-{$tahun}-{$random}";
@@ -245,8 +258,12 @@ class Auth extends BaseController
     public function adminLogin()
     {
         if (session()->get('isLoggedIn')) {
-            if (session()->get('role') == 'admin' || session()->get('role') == 'pimpinan') {
-                return redirect()->to('/admin/dashboard');
+            if (session()->get('role') == 'admin') {
+                return redirect()->to(base_url('admin/dashboard'));
+            } elseif (session()->get('role') == 'pimpinan') {
+                return redirect()->to(base_url('pimpinan/dashboard'));
+            } elseif (session()->get('id_pendaftar')) {
+                return redirect()->to(base_url('pendaftar/dashboard'));
             }
         }
         return view('auth/login_admin');

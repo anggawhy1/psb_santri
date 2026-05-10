@@ -11,7 +11,7 @@
     <div class="relative">
         <button id="profile-btn" onclick="toggleProfileMenu()" class="flex items-center gap-3 focus:outline-none hover:bg-gray-50 p-1.5 pr-3 rounded-full border border-transparent hover:border-gray-200 transition">
             
-            <div class="text-right hidden md:block">
+            <div class="text-right">
                 <p class="text-sm font-bold text-gray-700 leading-none"><?= session()->get('nama_lengkap') ?></p>
                 <p class="text-[10px] uppercase font-bold text-emerald-600 mt-0.5"><?= session()->get('role') ?></p>
             </div>

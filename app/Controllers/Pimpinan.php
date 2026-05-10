@@ -35,9 +35,9 @@ class Pimpinan extends BaseController
         $totalWawancara = $this->pendaftarModel
             ->join('jadwal_wawancara j', 'pendaftar.id_pendaftar = j.id_pendaftar')
             ->groupStart()
-                ->where('pendaftar.status_akhir IS NULL')
-                ->orWhere('pendaftar.status_akhir', '')
-                ->orWhere('pendaftar.status_akhir', 'Menunggu')
+            ->where('pendaftar.status_akhir IS NULL')
+            ->orWhere('pendaftar.status_akhir', '')
+            ->orWhere('pendaftar.status_akhir', 'Menunggu')
             ->groupEnd()
             ->countAllResults();
 
@@ -58,9 +58,9 @@ class Pimpinan extends BaseController
             ->groupBy('DATE(created_at)')
             ->orderBy('DATE(created_at)', 'DESC')
             ->findAll(10);
-            
+
         // Balik urutan array menjadi ASC (tanggal lama ke baru) pakai fungsi PHP
-        $grafik_data = array_reverse($grafik_data_desc); 
+        $grafik_data = array_reverse($grafik_data_desc);
 
         $lineData = [];
         foreach ($grafik_data as $g) {
@@ -102,11 +102,26 @@ class Pimpinan extends BaseController
 
     public function saveAdmin()
     {
-        if (!$this->validate([
-            'username' => 'required|is_unique[users.username]',
-            'password' => 'required|min_length[6]'
-        ])) {
-            return redirect()->back()->withInput()->with('error', 'Username sudah ada atau password kurang aman.');
+        // Validasi diperketat: Min 8 karakter & harus ada huruf + angka
+        $rules = [
+            'username' => [
+                'rules'  => 'required|is_unique[users.username]',
+                'errors' => ['is_unique' => 'Username ini sudah digunakan admin lain.']
+            ],
+            'password' => [
+                'rules'  => 'required|min_length[8]|regex_match[/^(?=.*[a-zA-Z])(?=.*[0-9]).+$/]',
+                'errors' => [
+                    'min_length'  => 'Password minimal harus 8 karakter.',
+                    'regex_match' => 'Password harus mengandung kombinasi huruf dan angka.'
+                ]
+            ]
+        ];
+
+        if (!$this->validate($rules)) {
+            // Ambil pesan error pertama yang muncul biar rapi di alert
+            $errors = $this->validator->getErrors();
+            $firstError = reset($errors);
+            return redirect()->back()->withInput()->with('error', $firstError);
         }
 
         $this->userModel->save([
@@ -119,6 +134,7 @@ class Pimpinan extends BaseController
         return redirect()->to('pimpinan/kelolaAdmin')->with('success', 'Admin baru berhasil ditambahkan.');
     }
 
+
     public function updateAdmin()
     {
         $id = $this->request->getPost('id_user');
@@ -129,14 +145,26 @@ class Pimpinan extends BaseController
             'username'     => $this->request->getPost('username'),
         ];
 
+        // Jika Pimpinan mencoba mengganti password Admin
         if (!empty($password)) {
+
+            // 1. Cek minimal 8 karakter
+            if (strlen($password) < 8) {
+                return redirect()->back()->with('error', 'Update Gagal: Password baru minimal 8 karakter.');
+            }
+
+            // 2. Cek kombinasi huruf dan angka
+            if (!preg_match('/[a-zA-Z]/', $password) || !preg_match('/[0-9]/', $password)) {
+                return redirect()->back()->with('error', 'Update Gagal: Password baru harus kombinasi huruf dan angka.');
+            }
+
             $dataUpdate['password'] = password_hash($password, PASSWORD_DEFAULT);
         }
 
         $this->userModel->update($id, $dataUpdate);
         return redirect()->to('pimpinan/kelolaAdmin')->with('success', 'Data Admin diperbarui.');
     }
-
+    
     public function hapusAdmin($id)
     {
         $this->userModel->delete($id);
@@ -175,7 +203,7 @@ class Pimpinan extends BaseController
         $keyword = $this->request->getGet('keyword');
         $status_wawancara = $this->request->getGet('status_wawancara');
         $model = $this->pendaftarModel;
-        
+
         $model->select('pendaftar.*, data_pendidikan.asal_sekolah, jadwal_wawancara.tanggal_wawancara, jadwal_wawancara.tautan_video');
         $model->join('data_pendidikan', 'data_pendidikan.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $model->join('jadwal_wawancara', 'jadwal_wawancara.id_pendaftar = pendaftar.id_pendaftar', 'left');
@@ -209,7 +237,7 @@ class Pimpinan extends BaseController
         $sort    = $this->request->getGet('sort');
         $status  = $this->request->getGet('status');
         $model = $this->pendaftarModel;
-        
+
         $model->select('pendaftar.*, pembayaran.status_pembayaran, berkas.status_berkas');
         $model->join('pembayaran', 'pembayaran.id_pendaftar = pendaftar.id_pendaftar', 'left');
         $model->join('berkas', 'berkas.id_pendaftar = pendaftar.id_pendaftar', 'left');

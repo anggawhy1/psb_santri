@@ -1,6 +1,11 @@
 <?= $this->extend('layout/admin') ?>
 <?= $this->section('content') ?>
 
+<?php 
+    // TAMBAHAN LOGIKA: Nangkap parameter mode dari URL
+    $is_edit = (isset($_GET['mode']) && $_GET['mode'] == 'edit'); 
+?>
+
 <div class="max-w-6xl mx-auto space-y-6">
 
     <div>
@@ -30,7 +35,7 @@
             <div class="flex flex-col items-end">
                 <span class="text-xs font-bold text-gray-400 uppercase mb-1">Tahapan Saat Ini</span>
                 <div class="bg-emerald-50 text-emerald-700 px-4 py-1 rounded-full border border-emerald-100 font-bold tracking-wide text-sm">
-                    <?= strtoupper($mode) ?>
+                    <?= strtoupper($mode) ?> <?= ($mode == 'formulir') ? ($is_edit ? '(EDIT)' : '(LIHAT)') : '' ?>
                 </div>
             </div>
         </div>
@@ -50,7 +55,7 @@
                     </div>
                 </div>
 
-                <?php if ($mode == 'formulir'): ?>
+                <?php if ($mode == 'formulir' && $is_edit): ?>
                     <form action="<?= base_url('admin/updateDataPendaftar') ?>" method="POST" class="p-0">
                         <?= csrf_field() ?>
                         <input type="hidden" name="id_pendaftar" value="<?= $pendaftar['id_pendaftar'] ?>">
@@ -241,7 +246,7 @@
                             <?php endif; ?>
                         </div>
 
-                        <div class="p-6 border-b border-gray-100">
+                        <div class="p-6">
                             <h4 class="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-4">D. Data Kesehatan</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>

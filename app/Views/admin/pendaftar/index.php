@@ -56,7 +56,7 @@
                     <select name="status_berkas" class="w-full border-gray-300 rounded text-sm focus:ring-emerald-500 focus:border-emerald-500">
                         <option value="">Semua</option>
                         <option value="Menunggu" <?= $f_berkas == 'Menunggu' ? 'selected' : '' ?>>Menunggu</option>
-                        <option value="Diterima" <?= $f_berkas == 'Diterima' ? 'selected' : '' ?>>Valid</option>
+                        <option value="Diterima" <?= $f_berkas == 'Diterima' ? 'selected' : '' ?>>Diterima</option>
                     </select>
                 </div>
                 <div>
@@ -82,7 +82,6 @@
                 <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b">
                     <tr>
                         <th class="px-6 py-4 border-r w-16 text-center">No</th>
-
                         <th class="px-6 py-4 border-r">Nama / No.Reg</th>
                         <th class="px-6 py-4 border-r text-center">Data Formulir</th>
                         <th class="px-6 py-4 border-r text-center">Status Bayar</th>
@@ -119,18 +118,19 @@
                                 </td>
 
                                 <td class="px-6 py-4 border-r">
-                                    <div class="font-bold text-gray-900"><?= esc($row['nama_lengkap']) ?></div>
+                                    <a href="<?= base_url('admin/viewFormulir/' . $row['id_pendaftar'] . '?mode=view') ?>" class="group block" title="Lihat Detail Pendaftar">
+                                        <div class="font-bold text-emerald-800 group-hover:text-emerald-950 group-hover:underline transition"><?= esc($row['nama_lengkap']) ?></div>
+                                    </a>
                                     <div class="text-xs font-mono font-bold text-emerald-600 mt-1">
                                         <?= esc($row['no_registrasi']) ?>
                                     </div>
                                 </td>
 
                                 <td class="px-6 py-4 border-r text-center">
-                                    <a href="<?= base_url('admin/viewFormulir/' . $row['id_pendaftar']) ?>" class="text-blue-600 hover:text-blue-800 text-xs font-bold hover:underline inline-flex items-center gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 011.414.586l5.414 5.414a1 1 0 01.586 1.414V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                        Cek Data
+                                    <a href="<?= base_url('admin/viewFormulir/' . $row['id_pendaftar'] . '?mode=edit') ?>"
+                                        class="inline-block bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1 rounded-full border border-emerald-200 hover:bg-emerald-200 hover:text-emerald-900 transition shadow-sm"
+                                        title="Edit Data Formulir">
+                                        Edit
                                     </a>
                                 </td>
 
@@ -138,9 +138,9 @@
                                     <?php if ($row['status_pembayaran'] != null): ?>
                                         <a href="<?= base_url('admin/viewPembayaran/' . $row['id_pendaftar']) ?>" class="hover:opacity-80 transition inline-block">
                                             <?php if ($row['status_pembayaran'] == 'Diterima'): ?>
-                                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full border border-green-200">✔ Lunas</span>
+                                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full border border-green-200">Lunas</span>
                                             <?php elseif ($row['status_pembayaran'] == 'Menunggu'): ?>
-                                                <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full border border-yellow-200 animate-pulse">⏳ Cek</span>
+                                                <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full border border-yellow-200 animate-pulse"> Detail</span>
                                             <?php elseif ($row['status_pembayaran'] == 'Ditolak'): ?>
                                                 <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full border border-red-200">✖ Ditolak</span>
                                             <?php endif; ?>
@@ -154,9 +154,9 @@
                                     <?php if ($row['status_berkas'] != null): ?>
                                         <a href="<?= base_url('admin/viewBerkas/' . $row['id_pendaftar']) ?>" class="hover:opacity-80 transition inline-block">
                                             <?php if ($row['status_berkas'] == 'Diterima'): ?>
-                                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full border border-green-200">✔ Valid</span>
+                                                <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full border border-green-200">Valid</span>
                                             <?php elseif ($row['status_berkas'] == 'Menunggu'): ?>
-                                                <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full border border-purple-200">📂 Cek</span>
+                                                <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full border border-purple-200"> Detail</span>
                                             <?php elseif ($row['status_berkas'] == 'Ditolak'): ?>
                                                 <span class="text-red-500 font-bold text-xs underline">Ditolak</span>
                                             <?php endif; ?>
@@ -168,13 +168,22 @@
 
                                 <td class="px-6 py-4 border-r text-center">
                                     <?php if ($row['status_wawancara'] == 'Dijadwalkan'): ?>
-                                        <a href="<?= base_url('admin/viewWawancara/' . $row['id_pendaftar']) ?>" class="hover:opacity-80 transition inline-block">
+                                        <a href="<?= base_url('admin/viewWawancara/' . $row['id_pendaftar']) ?>" class="hover:opacity-80 transition inline-block" title="Ubah Jadwal">
                                             <div class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-1 rounded border border-blue-100 inline-block hover:bg-blue-100">
                                                 <?= date('d/m H:i', strtotime($row['tanggal_wawancara'])) ?>
                                             </div>
                                         </a>
+                                    <?php elseif ($row['status_berkas'] == 'Diterima'): ?>
+                                        <a href="<?= base_url('admin/viewWawancara/' . $row['id_pendaftar']) ?>" class="text-amber-600 hover:text-amber-800 transition group inline-flex flex-col items-center" title="Atur Jadwal">
+                                            <div class="p-1.5 rounded-full group-hover:bg-amber-100 transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                            </div>
+                                            <span class="text-[10px] font-bold">Edit</span>
+                                        </a>
                                     <?php else: ?>
-                                        <span class="text-gray-300 text-xs">-</span>
+                                        <span class="text-gray-400 text-[10px] italic">Belum dijadwalkan</span>
                                     <?php endif; ?>
                                 </td>
 

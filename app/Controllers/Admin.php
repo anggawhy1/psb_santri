@@ -658,6 +658,14 @@ class Admin extends BaseController
                 return redirect()->back()->with('error', 'Password lama salah!');
             }
 
+            if (strlen($passNew) < 8) {
+                return redirect()->back()->with('error', 'Password baru minimal harus terdiri dari 8 karakter.');
+            }
+
+            if (!preg_match('/[a-zA-Z]/', $passNew) || !preg_match('/[0-9]/', $passNew)) {
+                return redirect()->back()->with('error', 'Password baru harus mengandung kombinasi huruf dan angka.');
+            }
+
             if ($passNew !== $passConfirm) {
                 return redirect()->back()->with('error', 'Konfirmasi password baru tidak cocok.');
             }

@@ -54,28 +54,34 @@
         </div>
 
         <div class="p-8 sm:p-10">
-            <form id="formProfile" action="<?= base_url('admin/updateProfile') ?>" method="POST">
+            <form id="formProfile" action="<?= base_url(session()->get('role') . '/updateProfile') ?>" method="POST">
                 <?= csrf_field() ?>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                     <div class="group">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-emerald-600 transition-colors">Nama Lengkap</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nama Lengkap</label>
                         <div class="relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             </div>
-                            <input type="text" value="<?= $user['nama_lengkap'] ?>" disabled class="block w-full pl-10 pr-3 py-3 border-gray-200 rounded-lg bg-gray-50 text-gray-500 sm:text-sm cursor-not-allowed focus:ring-0 focus:border-gray-200 transition-all">
+                            <input type="text" value="<?= $user['nama_lengkap'] ?>" disabled class="block w-full pl-10 pr-3 py-3 border-gray-200 rounded-lg bg-gray-100 text-gray-500 sm:text-sm cursor-not-allowed focus:ring-0 focus:border-gray-200 transition-all">
                         </div>
-                        <p class="mt-1 text-xs text-gray-400">Nama lengkap tidak dapat diubah.</p>
+                        <p class="mt-1 text-xs text-gray-400">Nama lengkap diatur oleh pimpinan.</p>
                     </div>
 
                     <div class="group">
-                        <label for="username" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-emerald-600 transition-colors">Username</label>
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="username" class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Username</label>
+                            <button type="button" id="btnEditUsername" onclick="enableUsername()" class="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-700 px-2.5 py-1 rounded font-bold transition flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                Edit Profil
+                            </button>
+                        </div>
                         <div class="relative rounded-md shadow-sm">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-5 w-5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
                             </div>
-                            <input type="text" name="username" id="username" value="<?= $user['username'] ?>" required class="block w-full pl-10 pr-3 py-3 border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-all placeholder-gray-300">
+                            <input type="text" name="username" id="username" value="<?= $user['username'] ?>" readonly required class="block w-full pl-10 pr-3 py-3 border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm transition-all">
                         </div>
                     </div>
                 </div>
@@ -86,35 +92,41 @@
                     </div>
 
                     <div class="relative z-10">
-                        <h4 class="text-base font-bold text-yellow-800 mb-6 flex items-center gap-2">
-                            <span class="bg-yellow-100 p-1.5 rounded-lg text-yellow-600">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            </span>
-                            Ganti Password (Opsional)
-                        </h4>
+                        <div class="flex justify-between items-center mb-6">
+                            <h4 class="text-base font-bold text-yellow-800 flex items-center gap-2">
+                                <span class="bg-yellow-100 p-1.5 rounded-lg text-yellow-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </span>
+                                Keamanan Akun
+                            </h4>
+                            <button type="button" id="btnEditPassword" onclick="enablePassword()" class="text-xs bg-yellow-200 hover:bg-yellow-300 text-yellow-800 px-4 py-2 rounded-full font-bold transition shadow-sm flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                Edit Password
+                            </button>
+                        </div>
                         
-                        <div class="space-y-6">
+                        <div id="passwordFields" class="space-y-6 hidden">
                              <div>
                                 <label class="block text-xs font-bold text-yellow-700 uppercase tracking-wide mb-2">Password Lama</label>
-                                <input type="password" name="password_old" class="block w-full border-yellow-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white py-2.5 px-4 text-sm placeholder-yellow-300 transition-all" placeholder="Masukkan password lama untuk verifikasi">
+                                <input type="password" id="pass_old" name="password_old" class="block w-full border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white py-2.5 px-4 text-sm placeholder-yellow-300 transition-all" placeholder="Masukkan password lama untuk verifikasi">
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-xs font-bold text-yellow-700 uppercase tracking-wide mb-2">Password Baru</label>
-                                    <input type="password" name="password" class="block w-full border-yellow-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white py-2.5 px-4 text-sm placeholder-yellow-300 transition-all">
+                                    <input type="password" id="pass_new" name="password" class="block w-full border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white py-2.5 px-4 text-sm placeholder-yellow-300 transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-yellow-700 uppercase tracking-wide mb-2">Konfirmasi Password</label>
-                                    <input type="password" name="password_confirm" class="block w-full border-yellow-200 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white py-2.5 px-4 text-sm placeholder-yellow-300 transition-all">
+                                    <input type="password" id="pass_conf" name="password_confirm" class="block w-full border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white py-2.5 px-4 text-sm placeholder-yellow-300 transition-all">
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-end pt-6 border-t border-gray-100">
-                    <button type="button" onclick="showModal()" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-sm font-bold rounded-lg text-white bg-gray-900 hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
+                <div id="actionButtons" class="flex justify-end pt-6 border-t border-gray-100 hidden">
+                    <button type="button" onclick="showModal()" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-sm font-bold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
                         <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                         Simpan Perubahan
                     </button>
@@ -157,13 +169,36 @@
 </div>
 
 <script>
+    // JS Untuk Mengaktifkan Form (Sesuai Activity Diagram)
+    function enableUsername() {
+        const input = document.getElementById('username');
+        input.removeAttribute('readonly');
+        input.classList.remove('bg-gray-50', 'text-gray-600', 'cursor-not-allowed');
+        input.classList.add('bg-white', 'text-gray-900');
+        input.focus();
+        
+        document.getElementById('btnEditUsername').classList.add('hidden');
+        document.getElementById('actionButtons').classList.remove('hidden');
+    }
+
+    function enablePassword() {
+        document.getElementById('passwordFields').classList.remove('hidden');
+        document.getElementById('btnEditPassword').classList.add('hidden');
+        document.getElementById('actionButtons').classList.remove('hidden');
+
+        // Jadikan field password wajib diisi jika tombol edit password diklik
+        document.getElementById('pass_old').required = true;
+        document.getElementById('pass_new').required = true;
+        document.getElementById('pass_conf').required = true;
+    }
+
+    // JS Modal Konfirmasi
     const modal = document.getElementById('confirmModal');
     const backdrop = document.getElementById('modalBackdrop');
     const panel = document.getElementById('modalPanel');
 
     function showModal() {
         modal.classList.remove('hidden');
-        // Small delay to allow display block to apply before opacity transition
         setTimeout(() => {
             backdrop.classList.remove('opacity-0', 'pointer-events-none');
             panel.classList.remove('scale-95', 'opacity-0', 'pointer-events-none');
@@ -175,8 +210,6 @@
         backdrop.classList.add('opacity-0', 'pointer-events-none');
         panel.classList.remove('scale-100', 'opacity-100');
         panel.classList.add('scale-95', 'opacity-0', 'pointer-events-none');
-        
-        // Wait for transition to finish before hiding
         setTimeout(() => {
             modal.classList.add('hidden');
         }, 300);
@@ -188,7 +221,6 @@
 </script>
 
 <style>
-    /* Optional simple fade-in animation for alerts */
     @keyframes fadeInDown {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }

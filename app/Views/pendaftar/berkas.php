@@ -83,7 +83,7 @@
             <div class="bg-green-50 text-green-800 p-4 rounded-lg mb-6 flex items-start gap-3">
                 <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <div class="text-sm">
-                    <span class="font-bold">Status Pembayaran Valid.</span> Silakan unggah berkas di bawah ini.
+                    <span class="font-bold">Status Pembayaran Valid.</span> Silakan unggah berkas di bawah ini <strong>(Format: JPG/PNG/PDF, Max 2MB)</strong>.
                 </div>
             </div>
         <?php endif; ?>
@@ -97,14 +97,14 @@
         <?php endif; ?>
 
         <?php if($status_verifikasi != 'Diterima'): ?>
+            
             <div class="space-y-8">
                 <?php 
-                    // PERBAIKAN: Susunan array berkas diubah, ktp_pendaftar dimasukkan langsung tanpa syarat if($is_mahasiswa)
                     $daftar_berkas = [
                         ['id' => 'akta_kelahiran', 'label' => 'Akta Kelahiran'],
                         ['id' => 'kartu_keluarga', 'label' => 'Kartu Keluarga (KK)'],
                         ['id' => 'ktp_ortu', 'label' => 'KTP Orang Tua / Wali'],
-                        ['id' => 'ktp_pendaftar', 'label' => 'KTP / KTM Calon Santri', 'note' => 'KTP untuk mahasiswa, dan KTM untuk pelajar'],
+                        ['id' => 'ktp_pendaftar', 'label' => 'KTP / KTM Calon Santri', 'note' => 'KTP untuk mahasiswa, dan Kartu Tanda Pelajar untuk siswa'],
                         ['id' => 'ijazah_raport', 'label' => 'Ijazah / Raport Terakhir'],
                         ['id' => 'pas_foto', 'label' => 'Pas Foto (3x4)', 'note' => 'Latar belakang merah/biru'],
                     ];
@@ -134,7 +134,7 @@
                     <form action="<?= base_url('pendaftar/uploadBerkas') ?>" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <?= csrf_field() ?>
                         <input type="hidden" name="jenis_berkas" value="<?= $row['id'] ?>">
-                        <input type="file" name="file_berkas" required class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition">
+                        <input type="file" name="file_berkas" accept=".jpg,.jpeg,.png,.pdf" required class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition">
                         <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 shadow-sm active:scale-95 transition">
                             <?= (!empty($berkas[$row['id']])) ? 'Ganti File' : 'Upload' ?>
                         </button>
