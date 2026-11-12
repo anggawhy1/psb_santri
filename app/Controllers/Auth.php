@@ -117,8 +117,7 @@ class Auth extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // Menggunakan koneksi DB bawaan Model untuk Transaksi
-        $this->pendaftarModel->db->transStart();
+        $this->pendaftarModel->db->transStart(); 
 
         $tahun = date('Y');
         $random = strtoupper(substr(uniqid(), -4));
@@ -141,8 +140,8 @@ class Auth extends BaseController
             'program_pilihan' => $this->request->getPost('program_pilihan'),
             'status_akhir'    => 'Menunggu'
         ];
-        $this->pendaftarModel->insert($dataPendaftar);
-        $idPendaftar = $this->pendaftarModel->getInsertID();
+        $this->pendaftarModel->insert($dataPendaftar); // Insert data pendaftar ke database
+        $idPendaftar = $this->pendaftarModel->getInsertID(); 
 
         // Siapkan Data Pendidikan sesuai dengan statusnya
         $dataPendidikan = [
@@ -233,7 +232,7 @@ class Auth extends BaseController
     {
         $session = session();
 
-        $email = $this->request->getPost('email');
+        $email = $this->request->getPost('email'); 
         $no_registrasi = $this->request->getPost('no_registrasi');
 
         $data = $this->pendaftarModel->where('email', $email)
