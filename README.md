@@ -42,15 +42,11 @@ Buka **XAMPP Control Panel**, klik **Start** pada **Apache** dan **MySQL**.
 
 ### 4. Siapkan file `.env`
 
-Salin file contoh `env` menjadi `.env`:
-
-```powershell
-copy env .env
-```
-
-Buka `.env`, cari bagian berikut, hapus tanda `#` di depannya, lalu sesuaikan:
+Buat file baru bernama `.env` (pakai titik di depan) di folder utama project, sejajar dengan file `spark` dan `composer.json`. Isi dengan:
 
 ```ini
+
+CI_ENVIRONMENT = development
 CI_ENVIRONMENT = development
 
 app.baseURL = 'http://localhost:8080/'
