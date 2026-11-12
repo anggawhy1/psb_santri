@@ -1,69 +1,176 @@
-# CodeIgniter 4 Application Starter
+# PSB Santri
 
-## What is CodeIgniter?
+Aplikasi web Penerimaan Santri Baru (PSB) berbasis CodeIgniter 4. Skema database disediakan melalui migration dan data awal melalui seeder.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+## Kebutuhan Sistem
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+Project ini dikembangkan dan dites dengan versi berikut. Versi yang sama atau lebih baru sebaiknya aman.
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+| Kebutuhan | Versi |
+|-----------|-------|
+| XAMPP | 8.2.12 (sudah termasuk PHP dan MariaDB) |
+| PHP | 8.2 atau lebih baru |
+| MariaDB / MySQL | MariaDB 10.4 atau lebih baru (MySQL 5.7+ juga bisa) |
+| Composer | 2.x |
+| Git | versi terbaru |
+| CodeIgniter | 4.7.0 (terpasang otomatis lewat Composer) |
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+Ekstensi PHP yang harus aktif: `intl`, `mbstring`, `mysqlnd`, `curl`, `json`.
+Cek dengan perintah `php -m`. Kalau `intl` belum ada, buka `C:\xampp\php\php.ini`, hapus tanda `;` di depan `extension=intl`, lalu restart Apache.
 
-## Installation & updates
+## Langkah Instalasi
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+### 1. Clone project
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+Masuk ke folder `htdocs` XAMPP, lalu clone:
 
-## Setup
+```powershell
+cd C:\xampp\htdocs
+git clone <URL-REPOSITORY-GITHUB> psb-santri
+cd psb-santri
+```
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+### 2. Install dependensi
 
-## Important Change with index.php
+```powershell
+composer install
+```
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+### 3. Nyalakan MySQL
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+Buka **XAMPP Control Panel**, klik **Start** pada **Apache** dan **MySQL**.
 
-**Please** read the user guide for a better explanation of how CI4 works!
+### 4. Buat file `.env`
 
-## Repository Management
+Buat file baru bernama `.env` (pakai titik di depan) di folder utama project, sejajar dengan file `spark` dan `composer.json`. Isi dengan:
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+```ini
+CI_ENVIRONMENT = development
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+app.baseURL = 'http://localhost:8080/'
 
-## Server Requirements
+database.default.hostname = localhost
+database.default.database = psb_santri
+database.default.username = root
+database.default.password =
+database.default.DBDriver = MySQLi
+database.default.port = 3306
+```
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+> Password `root` bawaan XAMPP kosong. Kalau MySQL kamu memakai password, isi di `database.default.password`.
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+### 5. Buat database kosong
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+```powershell
+php spark db:create psb_santri
+```
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+Atau lewat phpMyAdmin (`http://localhost/phpmyadmin`): klik **Baru**, isi nama `psb_santri`, pilih collation `utf8mb4_general_ci`, lalu **Buat**.
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+### 6. Jalankan migration
+
+Perintah ini membuat semua tabel secara otomatis:
+
+```powershell
+php spark migrate
+```
+
+### 7. Jalankan seeder
+
+Perintah ini mengisi data awal (akun admin, akun pimpinan, dan informasi PSB):
+
+```powershell
+php spark db:seed DatabaseSeeder
+```
+
+> Jalankan seeder **sekali saja** pada database yang masih kosong. Kalau dijalankan lagi, akan muncul error *Duplicate entry*. Untuk mengulang dari awal:
+> ```powershell
+> php spark migrate:refresh
+> php spark db:seed DatabaseSeeder
+> ```
+> Perintah `migrate:refresh` **menghapus semua data**.
+
+### 8. Jalankan aplikasi
+
+```powershell
+php spark serve
+```
+
+Buka di browser: **http://localhost:8080**
+
+Halaman login admin: **http://localhost:8080/admin/login**
+
+## Cara Login
+
+| Pengguna | Alamat login | Contoh (hosting) |
+|----------|--------------|------------------|
+| Admin dan Pimpinan | `/admin/login` | https://ppbanyuagung.com/admin/login |
+| Santri (pendaftar) | `/login` | https://ppbanyuagung.com/login |
+
+Admin dan pimpinan memakai halaman login yang sama, yaitu `/admin/login`. Sistem membedakan keduanya berdasarkan role akunnya.
+
+Santri bisa login lewat `/login`, atau lewat dua tempat lain di dalam aplikasi:
+
+- Halaman **PSB**
+- Halaman **Formulir**, lalu scroll ke bagian paling bawah
+
+Kalau dijalankan di komputer sendiri, tambahkan `http://localhost:8080` di depan alamatnya, misalnya `http://localhost:8080/admin/login` dan `http://localhost:8080/login`.
+
+## Akun Bawaan (dari Seeder)
+
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | `admin` | `admin123` |
+| Pimpinan | `pimpinan` | `pimpinan123` |
+
+Akun santri/pendaftar dibuat lewat halaman pendaftaran di aplikasi.
+
+> Ganti password bawaan ini kalau aplikasi dipakai di server sungguhan.
+
+## Ringkasan Perintah
+
+```powershell
+git clone <URL-REPOSITORY-GITHUB> psb-santri
+cd psb-santri
+composer install
+# buat file .env (lihat langkah 4)
+php spark db:create psb_santri
+php spark migrate
+php spark db:seed DatabaseSeeder
+php spark serve
+```
+
+## Masalah Umum
+
+| Masalah | Penyebab dan solusi |
+|---------|---------------------|
+| `Could not open input file: spark` | Terminal belum ada di folder project. Jalankan `cd` ke folder `psb-santri`. |
+| `Unable to connect to the database` | MySQL belum di-Start di XAMPP, atau isi `.env` salah. |
+| `Unknown database 'psb_santri'` | Database belum dibuat. Jalankan langkah 5. |
+| `Class "Locale" not found` / error `intl` | Aktifkan `extension=intl` di `php.ini`, lalu restart Apache. |
+| `Duplicate entry` saat seed | Seeder sudah pernah dijalankan. Lihat catatan di langkah 7. |
+| Folder `vendor` tidak ada | Jalankan `composer install`. |
+
+## Catatan Setelah Aplikasi Berjalan
+
+### Berita, prestasi, dan galeri kegiatan masih kosong
+
+Setelah clone dan seeder selesai, halaman **Beranda** belum menampilkan berita, prestasi, maupun galeri kegiatan. Halaman **Publikasi** (berita, prestasi, galeri kegiatan) juga masih kosong. Ini normal, karena seeder hanya mengisi akun dan informasi PSB, bukan konten publikasi.
+
+Untuk mengisinya:
+
+1. Buka halaman login admin di **http://localhost:8080/admin/login**.
+2. Login memakai akun admin bawaan (lihat bagian *Akun Bawaan*).
+3. Tambahkan berita, prestasi, dan galeri kegiatan lewat dashboard admin.
+
+Setelah ditambahkan, kontennya otomatis muncul di halaman Publikasi dan di Beranda.
+
+### Mengubah teks informasi di halaman umum
+
+Teks statis di halaman umum, misalnya syarat pendaftaran, program yang tersedia, biaya, jadwal gelombang, dan pengumuman, bisa diubah tanpa mengedit kode:
+
+1. Login ke dashboard admin.
+2. Buka menu **Informasi**.
+3. Di sana ada daftar informasi. Pilih yang ingin diubah, edit isinya, lalu simpan.
+
+Perubahan langsung tampil di halaman umum.
