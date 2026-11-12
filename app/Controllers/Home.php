@@ -4,23 +4,22 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\PromosiModel;
-use App\Models\InformasiPsbModel; // <-- Tambahkan ini
+use App\Models\InformasiPsbModel; 
 
 class Home extends BaseController
 {
-    // Tambahkan tipe class biar Intelephense VS Code nggak garis biru
     protected PromosiModel $promosiModel;
-    protected InformasiPsbModel $infoPsbModel; // <-- Tambahkan ini
+    protected InformasiPsbModel $infoPsbModel;
 
     public function __construct()
     {
         $this->promosiModel = new PromosiModel();
-        $this->infoPsbModel = new InformasiPsbModel(); // <-- Inisialisasi Model
+        $this->infoPsbModel = new InformasiPsbModel();
     }
 
     public function index()
     {
-        // 1. Ambil Info Tahun (Pakai Model)
+        // 1. Ambil Info Tahun
         $info_tahun = $this->infoPsbModel->find(1);
         $tahun_psb = $info_tahun ? $info_tahun['isi'] : '2026/2027';
 
@@ -67,10 +66,7 @@ class Home extends BaseController
         $infoPengumuman = $this->infoPsbModel->where('judul', 'Pengumuman')->first();
         $pengumuman = $infoPengumuman ? $infoPengumuman['isi'] : 'Untuk saat ini, kami baru membuka penerimaan pendaftaran khusus untuk <strong class="text-amber-900 border-b border-amber-400">Santri Putra</strong>.';
 
-        // ============================================================ //
         // 5. Ambil Info Gelombang (DIPISAH PAKAI TANDA | )
-        // ============================================================ //
-        // Bikin variabel lokal untuk dilempar ke dalam closure
         $infoModel = $this->infoPsbModel;
         $getGelombang = function ($judul) use ($infoModel) {
             $data = $infoModel->where('judul', $judul)->first();
@@ -81,20 +77,15 @@ class Home extends BaseController
             return ['Jadwal Menyusul', 'Deskripsi belum tersedia.'];
         };
 
-        // Tarik data masing-masing gelombang
         $gelombang_1 = $getGelombang('Gelombang 1');
         $gelombang_2 = $getGelombang('Gelombang 2');
         $gelombang_3 = $getGelombang('Gelombang 3');
 
-        // ============================================================ //
         // 6. Ambil Info Slogan Promo
-        // ============================================================ //
         $infoSlogan = $this->infoPsbModel->where('judul', 'Slogan Promo')->first();
         $slogan_promo = $infoSlogan ? $infoSlogan['isi'] : 'UANG PONDOK GRATIS';
 
-        // ============================================================ //
         // 7. Masukkan SEMUANYA ke $data buat dikirim ke View
-        // ============================================================ //
         $data = [
             'title'             => 'Info Pendaftaran | Ponpes Banyu Agung Ibnu Saut Bintoro',
             'tahun_psb'         => $tahun_psb,
@@ -118,7 +109,7 @@ class Home extends BaseController
 
     public function program()
     {
-        // 1. Tarik data "Sekolah Tujuan" dari tabel informasi_psb (Pakai Model)
+        // 1. Tarik data "Sekolah Tujuan" dari tabel informasi_psb
         $infoSekolah = $this->infoPsbModel->where('judul', 'Sekolah Tujuan')->first();
 
         $daftar_sekolah = [];

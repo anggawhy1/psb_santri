@@ -14,12 +14,30 @@
         </a>
     </div>
 
+    <div id="jsErrorBox" class="hidden bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-sm mb-6 flex items-start gap-3 transition-all duration-300">
+        <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div>
+             <p class="font-bold text-sm">Gagal Menyimpan Data</p>
+            <p class="text-sm mt-1" id="jsErrorMessage"></p>
+        </div>
+    </div>
+
+    <?php if(session()->getFlashdata('error')): ?>
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-sm mb-6 flex items-start gap-3">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div>
+                 <p class="font-bold text-sm">Gagal Menyimpan Data</p>
+                <p class="text-sm mt-1"><?= session()->getFlashdata('error') ?></p>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         
         <div class="h-1 bg-gradient-to-r from-emerald-500 to-teal-400"></div>
 
         <div class="p-8">
-            <form action="<?= $mode == 'add' ? base_url('admin/savePromosi') : base_url('admin/updatePromosi') ?>" method="POST" enctype="multipart/form-data">
+            <form id="formPromosi" action="<?= $mode == 'add' ? base_url('admin/savePromosi') : base_url('admin/updatePromosi') ?>" method="POST" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 <input type="hidden" name="type" value="<?= $type ?>">
                 
@@ -119,21 +137,42 @@
 <script>
     function previewImage(input) {
         const preview = document.getElementById('img-preview');
-        const container = input.closest('label'); 
-        const placeholder = container.querySelector('div.flex-col'); 
+        const placeholder = input.closest('label').querySelector('div.flex-col'); 
 
         if (input.files && input.files[0]) {
+            const file = input.files[0];
+
             const reader = new FileReader();
-            
             reader.onload = function(e) {
                 preview.src = e.target.result;
                 preview.classList.remove('opacity-0'); 
                 placeholder.classList.add('opacity-0'); 
             }
-            
-            reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(file);
         }
     }
+
+    document.getElementById('formPromosi').addEventListener('submit', function(e) {
+        const inputGambar = document.getElementById('dropzone-file');
+        const jsErrorBox = document.getElementById('jsErrorBox');
+        const jsErrorMessage = document.getElementById('jsErrorMessage');
+        
+        if (inputGambar.files && inputGambar.files[0]) {
+            const file = inputGambar.files[0];
+            const maxSizeMB = 2; 
+
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                e.preventDefault();
+
+                jsErrorMessage.innerHTML = `Ukuran gambar maksimal adalah ${maxSizeMB} MB. Gambar yang Anda pilih berukuran ${(file.size / (1024 * 1024)).toFixed(2)} MB. Silakan ganti gambar yang lebih kecil.`;
+                jsErrorBox.classList.remove('hidden');
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                jsErrorBox.classList.add('hidden');
+            }
+        }
+    });
 </script>
 
 <?= $this->endSection() ?>

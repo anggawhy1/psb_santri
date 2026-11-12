@@ -2,7 +2,6 @@
 <?= $this->section('content') ?>
 
 <?php 
-    // TAMBAHAN LOGIKA: Nangkap parameter mode dari URL
     $is_edit = (isset($_GET['mode']) && $_GET['mode'] == 'edit'); 
 ?>
 
