@@ -2,6 +2,8 @@
 
 Aplikasi web Penerimaan Santri Baru (PSB) berbasis **CodeIgniter 4**. Database dibuat lewat **migration** dan datanya diisi lewat **seeder**, jadi tidak perlu impor/ekspor file `.sql`.
 
+Versi yang sudah berjalan di hosting: https://ppbanyuagung.com (halaman admin: https://ppbanyuagung.com/admin/login)
+
 ## Kebutuhan Sistem
 
 Project ini dikembangkan dan dites dengan versi berikut. Versi yang sama atau lebih baru sebaiknya aman.
@@ -40,12 +42,11 @@ composer install
 
 Buka **XAMPP Control Panel**, klik **Start** pada **Apache** dan **MySQL**.
 
-### 4. Siapkan file `.env`
+### 4. Buat file `.env`
 
 Buat file baru bernama `.env` (pakai titik di depan) di folder utama project, sejajar dengan file `spark` dan `composer.json`. Isi dengan:
 
 ```ini
-
 CI_ENVIRONMENT = development
 
 app.baseURL = 'http://localhost:8080/'
@@ -99,6 +100,24 @@ php spark serve
 
 Buka di browser: **http://localhost:8080**
 
+Halaman login admin: **http://localhost:8080/admin/login**
+
+## Cara Login
+
+| Pengguna | Alamat login | Contoh (hosting) |
+|----------|--------------|------------------|
+| Admin dan Pimpinan | `/admin/login` | https://ppbanyuagung.com/admin/login |
+| Santri (pendaftar) | `/login` | https://ppbanyuagung.com/login |
+
+Admin dan pimpinan memakai halaman login yang sama, yaitu `/admin/login`. Sistem membedakan keduanya berdasarkan role akunnya.
+
+Santri bisa login lewat `/login`, atau lewat dua tempat lain di dalam aplikasi:
+
+- Halaman **PSB**
+- Halaman **Formulir**, lalu scroll ke bagian paling bawah
+
+Kalau dijalankan di komputer sendiri, tambahkan `http://localhost:8080` di depan alamatnya, misalnya `http://localhost:8080/admin/login` dan `http://localhost:8080/login`.
+
 ## Akun Bawaan (dari Seeder)
 
 | Role | Username | Password |
@@ -116,8 +135,7 @@ Akun santri/pendaftar dibuat lewat halaman pendaftaran di aplikasi.
 git clone <URL-REPOSITORY-GITHUB> psb-santri
 cd psb-santri
 composer install
-copy env .env
-# edit .env (baseURL dan database)
+# buat file .env (lihat langkah 4)
 php spark db:create psb_santri
 php spark migrate
 php spark db:seed DatabaseSeeder
@@ -134,3 +152,27 @@ php spark serve
 | `Class "Locale" not found` / error `intl` | Aktifkan `extension=intl` di `php.ini`, lalu restart Apache. |
 | `Duplicate entry` saat seed | Seeder sudah pernah dijalankan. Lihat catatan di langkah 7. |
 | Folder `vendor` tidak ada | Jalankan `composer install`. |
+
+## Catatan Setelah Aplikasi Berjalan
+
+### Berita, prestasi, dan galeri kegiatan masih kosong
+
+Setelah clone dan seeder selesai, halaman **Beranda** belum menampilkan berita, prestasi, maupun galeri kegiatan. Halaman **Publikasi** (berita, prestasi, galeri kegiatan) juga masih kosong. Ini normal, karena seeder hanya mengisi akun dan informasi PSB, bukan konten publikasi.
+
+Untuk mengisinya:
+
+1. Buka halaman login admin di **http://localhost:8080/admin/login**.
+2. Login memakai akun admin bawaan (lihat bagian *Akun Bawaan*).
+3. Tambahkan berita, prestasi, dan galeri kegiatan lewat dashboard admin.
+
+Setelah ditambahkan, kontennya otomatis muncul di halaman Publikasi dan di Beranda.
+
+### Mengubah teks informasi di halaman umum
+
+Teks statis di halaman umum, misalnya syarat pendaftaran, program yang tersedia, biaya, jadwal gelombang, dan pengumuman, bisa diubah tanpa mengedit kode:
+
+1. Login ke dashboard admin.
+2. Buka menu **Informasi**.
+3. Di sana ada daftar informasi. Pilih yang ingin diubah, edit isinya, lalu simpan.
+
+Perubahan langsung tampil di halaman umum.
