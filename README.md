@@ -47,7 +47,6 @@ Buat file baru bernama `.env` (pakai titik di depan) di folder utama project, se
 ```ini
 
 CI_ENVIRONMENT = development
-CI_ENVIRONMENT = development
 
 app.baseURL = 'http://localhost:8080/'
 
