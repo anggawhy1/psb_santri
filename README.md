@@ -1,8 +1,6 @@
 # PSB Santri
 
-Aplikasi web Penerimaan Santri Baru (PSB) berbasis **CodeIgniter 4**. Database dibuat lewat **migration** dan datanya diisi lewat **seeder**, jadi tidak perlu impor/ekspor file `.sql`.
-
-Versi yang sudah berjalan di hosting: https://ppbanyuagung.com (halaman admin: https://ppbanyuagung.com/admin/login)
+Aplikasi web Penerimaan Santri Baru (PSB) berbasis CodeIgniter 4. Skema database disediakan melalui migration dan data awal melalui seeder.
 
 ## Kebutuhan Sistem
 
